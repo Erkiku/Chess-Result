@@ -1165,6 +1165,50 @@ tbody tr:last-child td {
     color: var(--white-90);
 }
 
+/* Password Input with Eye Toggle Button */
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-input-wrap .form-input {
+    padding-right: 44px;
+    text-align: left;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white-50);
+    transition: all var(--transition-fast);
+    border-radius: 6px;
+    outline: none;
+    line-height: 1;
+}
+
+.password-toggle-btn:hover {
+    color: #ec4899;
+    background: rgba(236, 72, 153, 0.08);
+}
+
+.password-toggle-btn .eye-icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    pointer-events: none;
+}
+
 /* ========================
    Modal / Dialog
    ======================== */

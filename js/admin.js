@@ -55,6 +55,29 @@ function handleLogout() {
     adminUser = null;
     document.getElementById('loginContainer').style.display = 'block';
     document.getElementById('adminPanel').classList.remove('visible');
+    const pwdInput = document.getElementById('password');
+    if (pwdInput) {
+        pwdInput.value = '';
+        pwdInput.type = 'password';
+    }
+    const userInput = document.getElementById('username');
+    if (userInput) userInput.value = '';
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    const showIcon = btn.querySelector('.eye-show');
+    const hideIcon = btn.querySelector('.eye-hide');
+    if (showIcon && hideIcon) {
+        showIcon.style.display = isPassword ? 'none' : 'block';
+        hideIcon.style.display = isPassword ? 'block' : 'none';
+    }
+    btn.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
 }
 
 // Handle Enter key on login form
