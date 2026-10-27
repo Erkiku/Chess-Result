@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Round Results — Grand Chess Championship 2026</title>
+    <meta name="description" content="View round-by-round match results, player standings, and live score updates for the Grand Chess Championship 2026.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/round-results.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="index.html" class="navbar-brand">
+                <img src="assets/bce-logo.svg" alt="BCE Bhagalpur" class="nav-brand-logo">
+                UDAAN Chess
+            </a>
+            <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
+            <ul class="navbar-links" id="navLinks">
+                <li><a href="index.html">Leaderboard</a></li>
+                <li><a href="round-results.html" class="active">Round Results</a></li>
+                <li><a href="admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header animate-in">
+            <h1 class="page-title">⚔ Round <span class="accent">Results</span></h1>
+            <p class="page-subtitle">Match results, standings, and lead tracking for each round</p>
+        </div>
+
+        <!-- Round Tabs -->
+        <div class="round-tabs stagger-children" id="roundTabs">
+            <button class="round-tab active" data-round="1" onclick="selectRound(1)">
+                <span class="dot"></span> Round 1
+            </button>
+            <button class="round-tab" data-round="2" onclick="selectRound(2)">
+                <span class="dot"></span> Round 2
+            </button>
+            <button class="round-tab" data-round="3" onclick="selectRound(3)">
+                <span class="dot"></span> Round 3
+            </button>
+            <button class="round-tab" data-round="4" onclick="selectRound(4)">
+                <span class="dot"></span> Round 4
+            </button>
+            <button class="round-tab" data-round="5" onclick="selectRound(5)">
+                <span class="dot"></span> Round 5
+            </button>
+        </div>
+
+        <!-- Round Info Bar -->
+        <div class="round-info-bar animate-in" id="roundInfoBar">
+            <div class="round-info-left">
+                <span class="round-title" id="roundTitle">Round 1</span>
+                <span class="badge badge-upcoming" id="roundStatusBadge">Loading...</span>
+            </div>
+            <div class="match-counter">
+                <span id="matchCounter">—</span>
+            </div>
+        </div>
+
+        <!-- View Toggle -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <div class="view-toggle">
+                <button class="view-toggle-btn active" id="btnTableView" onclick="setView('table')">📊 Table</button>
+                <button class="view-toggle-btn" id="btnCardView" onclick="setView('cards')">🃏 Cards</button>
+            </div>
+        </div>
+
+        <!-- Match Results Table -->
+        <div id="tableView">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Match</th>
+                            <th>White Player</th>
+                            <th>Result</th>
+                            <th>Black Player</th>
+                            <th>Winner</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matchTableBody">
+                        <tr>
+                            <td colspan="5">
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <span>Loading matches...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Match Cards View -->
+        <div id="cardsView" style="display: none;">
+            <div class="match-cards-grid stagger-children" id="matchCardsContainer">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Section Divider -->
+        <div class="section-divider"></div>
+
+        <!-- Round Standings -->
+        <div class="standings-section">
+            <div class="section-title">
+                🏆 <span>Round Standings</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Round Points</th>
+                            <th>Overall Rank</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standingsBody">
+                        <tr>
+                            <td colspan="4">
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <span>Loading standings...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/scoring.js"></script>
+    <script src="js/round-results.js"></script>
+</body>
+</html>

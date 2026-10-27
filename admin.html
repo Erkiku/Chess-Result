@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — UDAAN Chess Championship</title>
+    <meta name="description" content="Tournament administration panel for managing match results, round scheduling, pairings, and player data.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/round-results.css">
+    <style>
+        /* Admin-specific styles */
+        .admin-login-container {
+            max-width: 420px;
+            margin: 80px auto;
+        }
+
+        .admin-login-card {
+            background: var(--black-card);
+            border: 1px solid var(--black-border);
+            border-radius: var(--radius-xl);
+            padding: 40px 32px;
+            text-align: center;
+        }
+
+        .admin-login-card .logo {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .admin-login-card h2 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .admin-login-card p {
+            color: var(--white-50);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+
+        .admin-panel {
+            display: none;
+        }
+
+        .admin-panel.visible {
+            display: block;
+        }
+
+        .admin-section {
+            display: none;
+            margin-bottom: 40px;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .admin-section-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Admin Subnav Tabs */
+        .admin-subnav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 28px;
+            border-bottom: 1px solid var(--white-10);
+            padding-bottom: 12px;
+            overflow-x: auto;
+        }
+
+        .admin-subnav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            background: var(--black-card);
+            color: var(--white-70);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .admin-subnav-btn:hover {
+            color: var(--white);
+            border-color: var(--white-15);
+            background: var(--white-05);
+        }
+
+        .admin-subnav-btn.active {
+            color: var(--white);
+            background: var(--blue-600);
+            border-color: var(--blue-500);
+            box-shadow: var(--shadow-blue);
+        }
+
+        /* Search & Actions Bar */
+        .action-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            background: var(--black-soft);
+            border: 1px solid var(--black-border);
+            border-radius: var(--radius-md);
+            color: var(--white-90);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color var(--transition-fast);
+        }
+
+        .search-box input:focus {
+            border-color: var(--blue-500);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--white-30);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        /* Match Admin Cards */
+        .match-admin-card {
+            background: var(--black-card);
+            border: 1px solid var(--black-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 12px;
+            transition: all var(--transition-fast);
+        }
+
+        .match-admin-card:hover {
+            border-color: var(--white-15);
+        }
+
+        .match-admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .match-admin-players {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .match-admin-players .vs {
+            color: var(--white-30);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .match-admin-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .match-admin-controls select {
+            padding: 8px 12px;
+            background: var(--black-soft);
+            border: 1px solid var(--black-border);
+            border-radius: var(--radius-md);
+            color: var(--white-90);
+            font-size: 0.85rem;
+            font-family: var(--font-body);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .match-admin-controls select:focus {
+            border-color: var(--blue-500);
+        }
+
+        /* Pairing Creator Card */
+        .pairing-creator-card {
+            background: var(--black-card);
+            border: 1px solid var(--blue-600);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 102, 255, 0.15);
+        }
+
+        .pairing-form-grid {
+            display: grid;
+            grid-template-columns: 90px 1fr auto 1fr auto;
+            gap: 16px;
+            align-items: end;
+        }
+
+        @media (max-width: 860px) {
+            .pairing-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .history-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            background: var(--white-05);
+            border-radius: var(--radius-md);
+            margin-bottom: 8px;
+        }
+
+        .history-item .history-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--blue-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .history-details {
+            flex: 1;
+        }
+
+        .history-details .match-info {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--white-90);
+        }
+
+        .history-details .change-info {
+            font-size: 0.8rem;
+            color: var(--white-50);
+            margin-top: 2px;
+        }
+
+        .history-details .time-info {
+            font-size: 0.75rem;
+            color: var(--white-30);
+            margin-top: 4px;
+        }
+
+        .admin-logout-btn {
+            margin-left: auto;
+        }
+
+        .admin-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="index.html" class="navbar-brand">
+                <img src="assets/bce-logo.svg" alt="BCE Bhagalpur" class="nav-brand-logo">
+                UDAAN Chess
+            </a>
+            <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
+            <ul class="navbar-links" id="navLinks">
+                <li><a href="index.html">Leaderboard</a></li>
+                <li><a href="round-results.html">Round Results</a></li>
+                <li><a href="admin.html" class="active">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Login Screen -->
+    <div class="admin-login-container" id="loginContainer">
+        <div class="admin-login-card animate-in">
+            <div class="logo">🔐</div>
+            <h2>Admin Login</h2>
+            <p>Sign in to manage tournament results</p>
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" id="username" class="form-input" placeholder="Enter username" value="admin">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Enter password" value="admin123">
+            </div>
+            <div id="loginError" style="color: #fca5a5; font-size: 0.85rem; margin-bottom: 12px; display: none;">Invalid credentials</div>
+            <button class="btn btn-primary" style="width: 100%; padding: 14px;" onclick="handleLogin()">
+                Sign In →
+            </button>
+        </div>
+    </div>
+
+    <!-- Admin Panel (hidden until login) -->
+    <div class="container admin-panel" id="adminPanel">
+        <!-- Admin Header -->
+        <div class="page-header">
+            <div class="admin-header-bar">
+                <div>
+                    <h1 class="page-title">⚙ Admin <span class="accent">Dashboard</span></h1>
+                    <p class="page-subtitle">Tournament administration and live operations</p>
+                </div>
+                <button class="btn btn-secondary admin-logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Admin Subnav Tabs -->
+        <div class="admin-subnav" id="adminSubnav">
+            <button class="admin-subnav-btn active" data-tab="players" onclick="switchAdminTab('players')">
+                👤 Player Management
+            </button>
+            <button class="admin-subnav-btn" data-tab="pairings" onclick="switchAdminTab('pairings')">
+                ⚔️ Match Pairings
+            </button>
+            <button class="admin-subnav-btn" data-tab="results" onclick="switchAdminTab('results')">
+                🏆 Result Management
+            </button>
+            <button class="admin-subnav-btn" data-tab="history" onclick="switchAdminTab('history')">
+                📋 Audit History
+            </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SECTION 1: PLAYER MANAGEMENT -->
+        <!-- ============================================== -->
+        <div class="admin-section active" id="sec-players">
+            <div class="action-bar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="playerSearchInput" placeholder="Search player by name or Roll-No..." oninput="filterAdminPlayers()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddPlayerModal()">
+                    + Add New Player
+                </button>
+            </div>
+
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <div style="padding: 16px 24px; border-bottom: 1px solid var(--black-border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1rem; font-weight: 700;">Registered Players</h3>
+                    <span id="playerCountBadge" class="badge badge-in-progress">Loading...</span>
+                </div>
+                <div class="table-wrap" style="border: none; border-radius: 0;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Roll-No</th>
+                                <th>Player Name</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminPlayersTableBody">
+                            <tr>
+                                <td colspan="4">
+                                    <div class="loading">
+                                        <div class="spinner"></div>
+                                        <span>Loading players...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SECTION 2: MATCH PAIRING SYSTEM -->
+        <!-- ============================================== -->
+        <div class="admin-section" id="sec-pairings">
+            <!-- Round Selector -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <div class="round-tabs" id="pairingRoundTabs" style="margin-bottom: 0;">
+                    <button class="round-tab active" data-round="1" onclick="selectPairingRound(1)">
+                        <span class="dot"></span> Round 1
+                    </button>
+                    <button class="round-tab" data-round="2" onclick="selectPairingRound(2)">
+                        <span class="dot"></span> Round 2
+                    </button>
+                    <button class="round-tab" data-round="3" onclick="selectPairingRound(3)">
+                        <span class="dot"></span> Round 3
+                    </button>
+                    <button class="round-tab" data-round="4" onclick="selectPairingRound(4)">
+                        <span class="dot"></span> Round 4
+                    </button>
+                    <button class="round-tab" data-round="5" onclick="selectPairingRound(5)">
+                        <span class="dot"></span> Round 5
+                    </button>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary btn-sm" onclick="togglePublishCurrentRound(true)">
+                        👁️ Publish Round Pairings
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="togglePublishCurrentRound(false)">
+                        🔒 Unpublish
+                    </button>
+                </div>
+            </div>
+
+            <!-- Create Pairing Form Card -->
+            <div class="pairing-creator-card animate-in">
+                <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 16px;">
+                    ➕ Create Match Pairing for <span id="currentPairingRoundTitle" style="color: var(--blue-400);">Round 1</span>
+                </h3>
+                <div class="pairing-form-grid">
+                    <div>
+                        <label class="form-label" for="pairingBoardNum">Board #</label>
+                        <input type="number" id="pairingBoardNum" class="form-input" min="1" value="1">
+                    </div>
+                    <div>
+                        <label class="form-label" for="pairingWhitePlayer">White Player (Piece ♔)</label>
+                        <select id="pairingWhitePlayer" class="form-input">
+                            <option value="">Select White Player</option>
+                        </select>
+                    </div>
+                    <div style="text-align: center; padding-bottom: 12px; font-weight: 700; color: var(--white-30);">
+                        VS
+                    </div>
+                    <div>
+                        <label class="form-label" for="pairingBlackPlayer">Black Player (Piece ♚)</label>
+                        <select id="pairingBlackPlayer" class="form-input">
+                            <option value="">Select Black Player</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" style="height: 44px; white-space: nowrap;" onclick="handleCreatePairing()">
+                            Add Pairing
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing Pairings for Selected Round -->
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <div style="padding: 16px 24px; border-bottom: 1px solid var(--black-border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1rem; font-weight: 700;">Scheduled Pairings</h3>
+                    <span id="roundPairingCount" class="badge badge-in-progress">0 Matches</span>
+                </div>
+                <div class="table-wrap" style="border: none; border-radius: 0;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Board</th>
+                                <th>White Player</th>
+                                <th style="text-align: center;">VS</th>
+                                <th>Black Player</th>
+                                <th>Status</th>
+                                <th>Published</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roundPairingsTableBody">
+                            <tr>
+                                <td colspan="7">
+                                    <div class="loading">
+                                        <div class="spinner"></div>
+                                        <span>Loading pairings...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SECTION 3: RESULT MANAGEMENT -->
+        <!-- ============================================== -->
+        <div class="admin-section" id="sec-results">
+            <!-- Round Selector -->
+            <div class="round-tabs" id="adminRoundTabs">
+                <button class="round-tab active" data-round="1" onclick="adminSelectRound(1)">
+                    <span class="dot"></span> Round 1
+                </button>
+                <button class="round-tab" data-round="2" onclick="adminSelectRound(2)">
+                    <span class="dot"></span> Round 2
+                </button>
+                <button class="round-tab" data-round="3" onclick="adminSelectRound(3)">
+                    <span class="dot"></span> Round 3
+                </button>
+                <button class="round-tab" data-round="4" onclick="adminSelectRound(4)">
+                    <span class="dot"></span> Round 4
+                </button>
+                <button class="round-tab" data-round="5" onclick="adminSelectRound(5)">
+                    <span class="dot"></span> Round 5
+                </button>
+            </div>
+
+            <!-- Matches List -->
+            <div id="adminMatchesList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Loading matches...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SECTION 4: AUDIT HISTORY -->
+        <!-- ============================================== -->
+        <div class="admin-section" id="sec-history">
+            <div id="resultHistoryContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Loading history...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Player Modal -->
+    <div class="modal-overlay" id="addPlayerModal">
+        <div class="modal">
+            <h3 class="modal-title">➕ Add New Player</h3>
+            <div class="form-group">
+                <label class="form-label" for="newPlayerName">Player Full Name</label>
+                <input type="text" id="newPlayerName" class="form-input" placeholder="e.g. Ramesh Chandra">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="newRollNo">Roll-No</label>
+                <input type="text" id="newRollNo" class="form-input" placeholder="e.g. 26BCE001">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeAddPlayerModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="handleAddPlayerSubmit()">Save Player</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Player Modal -->
+    <div class="modal-overlay" id="editPlayerModal">
+        <div class="modal">
+            <h3 class="modal-title">✏️ Edit Player Details</h3>
+            <input type="hidden" id="editPlayerRecordId">
+            <div class="form-group">
+                <label class="form-label" for="editPlayerName">Player Full Name</label>
+                <input type="text" id="editPlayerName" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="editRollNo">Roll-No</label>
+                <input type="text" id="editRollNo" class="form-input">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeEditPlayerModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="handleEditPlayerSubmit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <h3 class="modal-title" id="confirmTitle">⚠️ Confirmation</h3>
+            <p id="confirmMessage" style="color: var(--white-70); font-size: 0.9rem;">
+                Are you sure?
+            </p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-primary" id="confirmBtn" onclick="confirmAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/scoring.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Chess Championship 2026 — Leaderboard</title>
+    <meta name="description" content="Live leaderboard and standings for the Grand Chess Championship 2026. Track player rankings, match results, and tournament progress in real-time.">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="leaderboard-page">
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="index.html" class="navbar-brand">
+                <img src="assets/bce-logo.svg" alt="BCE Bhagalpur" class="nav-brand-logo">
+                UDAAN Chess
+            </a>
+            <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
+            <ul class="navbar-links" id="navLinks">
+                <li><a href="index.html" class="active">Leaderboard</a></li>
+                <li><a href="round-results.html">Round Results</a></li>
+                <li><a href="admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header animate-in">
+            <div class="page-header-with-logo">
+                <img src="assets/udaan-logo.jpg" alt="UDAAN Chess Club Logo" class="page-header-logo">
+                <div>
+                    <h1 class="page-title">UDAAN <span class="accent">Chess Tournament</span> 2026</h1>
+                    <p class="page-subtitle">Live tournament standings and player rankings</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Winner & Runner Up Podium (Displayed only after all matches happen) -->
+        <div class="podium-grid stagger-children" id="championsContainer" style="display: none;">
+            <!-- Populated by JS when all matches are completed -->
+        </div>
+
+        <!-- Full Leaderboard Table -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--black-border);">
+                <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 1.15rem;">
+                    📊 Full Standings
+                </h2>
+            </div>
+            <div class="table-wrap" style="border: none; border-radius: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Roll-No</th>
+                            <th>Points</th>
+                            <th>Played</th>
+                            <th>W</th>
+                            <th>D</th>
+                            <th>L</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <tr>
+                            <td colspan="8">
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <span>Loading standings...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/scoring.js"></script>
+    <script>
+        // ========================
+        // Index Page Logic
+        // ========================
+
+        let currentLeaderboard = [];
+
+        async function loadDashboard() {
+            try {
+                const leaderboard = await getLeaderboard(DEFAULT_TOURNAMENT_ID);
+                currentLeaderboard = leaderboard;
+
+                // Check if all tournament matches have happened (completed)
+                const allMatches = await getAllMatches(DEFAULT_TOURNAMENT_ID);
+                const allMatchesHappened = allMatches && allMatches.length > 0 && allMatches.every(m => m.status === 'completed' && m.result && m.result !== 'pending');
+
+                if (allMatchesHappened) {
+                    renderChampions(leaderboard.slice(0, 2));
+                } else {
+                    const container = document.getElementById('championsContainer');
+                    if (container) {
+                        container.innerHTML = '';
+                        container.style.display = 'none';
+                    }
+                }
+
+                // Full leaderboard
+                renderLeaderboard(leaderboard);
+
+            } catch (err) {
+                console.error('Error loading dashboard:', err);
+                showToast('Failed to load dashboard data', true);
+            }
+        }
+
+        function renderChampions(top2) {
+            const container = document.getElementById('championsContainer');
+            if (!container) return;
+
+            if (!top2 || top2.length < 2) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'grid';
+            const winner = top2[0];
+            const runnerUp = top2[1];
+
+            container.innerHTML = `
+                <!-- Winner Card -->
+                <div class="podium-card winner">
+                    <div class="podium-badge">🏆 Winner</div>
+                    <div class="podium-rank">#1</div>
+                    <div class="podium-name">${winner.player_name}</div>
+                    <div class="podium-roll">Roll-No: ${winner.roll_no || winner.player_code}</div>
+                    <div class="podium-points">${winner.total_points} pts</div>
+                    <div class="podium-meta">${winner.wins}W · ${winner.draws}D · ${winner.losses}L (${winner.matches_played} matches)</div>
+                </div>
+
+                <!-- Runner Up Card -->
+                <div class="podium-card runner-up">
+                    <div class="podium-badge">🥈 Runner Up</div>
+                    <div class="podium-rank">#2</div>
+                    <div class="podium-name">${runnerUp.player_name}</div>
+                    <div class="podium-roll">Roll-No: ${runnerUp.roll_no || runnerUp.player_code}</div>
+                    <div class="podium-points">${runnerUp.total_points} pts</div>
+                    <div class="podium-meta">${runnerUp.wins}W · ${runnerUp.draws}D · ${runnerUp.losses}L (${runnerUp.matches_played} matches)</div>
+                </div>
+            `;
+        }
+
+        function renderLeaderboard(data) {
+            const tbody = document.getElementById('leaderboardBody');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p>No players registered</p></div></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.map((p, i) => `
+                <tr>
+                    <td class="rank-cell ${i === 0 ? 'rank-1' : ''}">${i + 1}</td>
+                    <td><strong>${p.player_name}</strong></td>
+                    <td style="color: var(--white-50); font-family: monospace;">${p.roll_no || p.player_code}</td>
+                    <td class="points-highlight">${p.total_points}</td>
+                    <td>${p.matches_played}</td>
+                    <td>${p.wins}</td>
+                    <td>${p.draws}</td>
+                    <td>${p.losses}</td>
+                </tr>
+            `).join('');
+        }
+
+
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'error' : ''}`;
+            toast.innerHTML = `<span>${isError ? '⚠️' : '✓'}</span> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function toggleNav() {
+            document.getElementById('navLinks').classList.toggle('open');
+        }
+
+        // Realtime subscription
+        subscribeToMatches((payload) => {
+            showToast('Results updated — refreshing...');
+            loadDashboard();
+        });
+
+        // Initialize
+        loadDashboard();
+    </script>
+</body>
+</html>
