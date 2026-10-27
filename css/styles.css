@@ -208,6 +208,10 @@ body.leaderboard-page .card {
     flex-shrink: 0;
 }
 
+.nav-icon:empty {
+    display: none;
+}
+
 .col-center,
 th.col-center,
 td.col-center {
