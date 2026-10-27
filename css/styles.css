@@ -66,6 +66,54 @@
     --transition-slow: 400ms ease;
 }
 
+/* ================================
+   Light Theme Tokens
+   ================================ */
+[data-theme="light"] {
+    /* Core Surface Colors */
+    --black: #f8fafc;
+    --black-soft: #f1f5f9;
+    --black-card: #ffffff;
+    --black-border: #e2e8f0;
+    --black-hover: #f1f5f9;
+
+    /* Blues */
+    --blue-900: #dbeafe;
+    --blue-800: #bfdbfe;
+    --blue-700: #93c5fd;
+    --blue-600: #2563eb;
+    --blue-500: #3b82f6;
+    --blue-400: #1d4ed8;
+    --blue-300: #1e40af;
+    --blue-200: #1e3a8a;
+    --blue-100: #172554;
+    --blue-glow: rgba(37, 99, 235, 0.08);
+    --blue-glow-strong: rgba(37, 99, 235, 0.2);
+
+    /* Text & Inverted Values */
+    --white: #0f172a;
+    --white-90: #1e293b;
+    --white-70: #334155;
+    --white-50: #64748b;
+    --white-30: #94a3b8;
+    --white-15: #cbd5e1;
+    --white-10: #e2e8f0;
+    --white-05: #f1f5f9;
+
+    /* Status Colors */
+    --win-color: #2563eb;
+    --draw-color: #64748b;
+    --pending-color: #94a3b8;
+    --loss-color: #cbd5e1;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
+    --shadow-blue: 0 4px 14px rgba(37, 99, 235, 0.15);
+    --shadow-blue-lg: 0 10px 30px rgba(37, 99, 235, 0.2);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -248,6 +296,42 @@ td.col-center {
     font-size: 1.5rem;
     cursor: pointer;
     padding: 4px;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--white-05);
+    border: 1px solid var(--white-15);
+    color: var(--white-90);
+    font-size: 1.15rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+    line-height: 1;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--blue-glow);
+    border-color: var(--blue-400);
+    transform: rotate(15deg) scale(1.05);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.92);
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 /* ========================
@@ -1447,4 +1531,139 @@ tbody tr:last-child td {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--white-30);
+}
+
+/* ==============================================
+   Tournament Workflow Guide (Light & Dark UI)
+   ============================================== */
+
+.workflow-container {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 20px 0;
+}
+
+.workflow-card {
+    width: 100%;
+    padding: 24px 30px;
+    border-radius: 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    user-select: none;
+}
+
+.workflow-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: var(--shadow-lg);
+}
+
+.workflow-card:active {
+    transform: scale(0.98);
+}
+
+.workflow-icon {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 4px;
+    stroke-width: 2.2;
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+}
+
+.workflow-card:hover .workflow-icon {
+    transform: scale(1.18);
+}
+
+.workflow-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.workflow-desc {
+    font-size: 0.92rem;
+    line-height: 1.4;
+    opacity: 0.85;
+    font-family: var(--font-body);
+}
+
+.workflow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    color: var(--white-50);
+    font-size: 1.3rem;
+    animation: bounceWorkflowArrow 2s ease-in-out infinite;
+}
+
+@keyframes bounceWorkflowArrow {
+    0%, 100% { transform: translateY(0); opacity: 0.6; }
+    50% { transform: translateY(5px); opacity: 1; }
+}
+
+/* Light Theme Step Colors (Exact match to screenshot pastel colors) */
+[data-theme="light"] .workflow-step-1 {
+    background: #e0edff;
+    border: 1px solid #bfdbfe;
+    color: #1e3a8a;
+}
+[data-theme="light"] .workflow-step-2 {
+    background: #f1e8ff;
+    border: 1px solid #e9d5ff;
+    color: #581c87;
+}
+[data-theme="light"] .workflow-step-3 {
+    background: #ffedd5;
+    border: 1px solid #fed7aa;
+    color: #7c2d12;
+}
+[data-theme="light"] .workflow-step-4 {
+    background: #e1f7e9;
+    border: 1px solid #bbf7d0;
+    color: #14532d;
+}
+
+/* Dark Theme Step Colors (Sleek Luminous Neon Accents) */
+[data-theme="dark"] .workflow-step-1,
+:root:not([data-theme="light"]) .workflow-step-1 {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.16) 0%, rgba(22, 22, 31, 0.95) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    color: #93c5fd;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+}
+[data-theme="dark"] .workflow-step-2,
+:root:not([data-theme="light"]) .workflow-step-2 {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.16) 0%, rgba(22, 22, 31, 0.95) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.45);
+    color: #d8b4fe;
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.15);
+}
+[data-theme="dark"] .workflow-step-3,
+:root:not([data-theme="light"]) .workflow-step-3 {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.16) 0%, rgba(22, 22, 31, 0.95) 100%);
+    border: 1px solid rgba(249, 115, 22, 0.45);
+    color: #fdba74;
+    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.15);
+}
+[data-theme="dark"] .workflow-step-4,
+:root:not([data-theme="light"]) .workflow-step-4 {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.16) 0%, rgba(22, 22, 31, 0.95) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.45);
+    color: #86efac;
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.15);
 }

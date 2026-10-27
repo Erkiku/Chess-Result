@@ -7,6 +7,7 @@
     <meta name="description" content="View round-by-round match results, player standings, and live score updates for the Grand Chess Championship 2026.">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/round-results.css">
+    <script src="js/theme.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -18,7 +19,10 @@
                 <img src="assets/bce-logo.svg" alt="BCE Bhagalpur" class="nav-brand-logo">
                 UDAAN Chess
             </a>
-            <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
+            <div class="nav-actions">
+                <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Switch to Light UI" aria-label="Toggle theme">☀️</button>
+                <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
+            </div>
             <ul class="navbar-links" id="navLinks">
                 <li><a href="index.html"><span class="nav-icon"></span> Leaderboard</a></li>
                 <li><a href="round-results.html" class="active"><span class="nav-icon"></span> Round Results</a></li>
