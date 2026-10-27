@@ -792,6 +792,24 @@ tbody tr:last-child td {
     color: var(--white-30);
 }
 
+.badge-branch {
+    background: rgba(236, 72, 153, 0.12);
+    color: #db2777;
+    border: 1px solid rgba(236, 72, 153, 0.28);
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    letter-spacing: 0.03em;
+}
+
+[data-theme="dark"] .badge-branch {
+    background: rgba(236, 72, 153, 0.2);
+    color: #f472b6;
+    border-color: rgba(236, 72, 153, 0.4);
+}
+
 @keyframes pulse-badge {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
@@ -1539,6 +1557,8 @@ tbody tr:last-child td {
     table td:nth-child(7),
     table th:nth-child(8),
     table td:nth-child(8),
+    table th:nth-child(9),
+    table td:nth-child(9),
     .points-highlight,
     .col-center {
         text-align: center !important;

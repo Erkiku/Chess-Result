@@ -396,6 +396,7 @@
                         <thead>
                             <tr>
                                 <th>Roll-No</th>
+                                <th>Branch</th>
                                 <th>Player Name</th>
                                 <th>Status</th>
                                 <th style="text-align: right;">Actions</th>
@@ -403,7 +404,7 @@
                         </thead>
                         <tbody id="adminPlayersTableBody">
                             <tr>
-                                <td colspan="4">
+                                <td colspan="5">
                                     <div class="loading">
                                         <div class="spinner"></div>
                                         <span>Loading players...</span>
@@ -574,6 +575,18 @@
                 <label class="form-label" for="newRollNo">Roll-No</label>
                 <input type="text" id="newRollNo" class="form-input" placeholder="e.g. 26BCE001">
             </div>
+            <div class="form-group">
+                <label class="form-label" for="newPlayerBranch">Branch</label>
+                <select id="newPlayerBranch" class="form-input" style="cursor: pointer;">
+                    <option value="" disabled selected>Select Branch</option>
+                    <option value="CS">CS</option>
+                    <option value="CSE">CSE</option>
+                    <option value="MnC">MnC</option>
+                    <option value="EE">EE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="ME">ME</option>
+                </select>
+            </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeAddPlayerModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="handleAddPlayerSubmit()">Save Player</button>
@@ -593,6 +606,18 @@
             <div class="form-group">
                 <label class="form-label" for="editRollNo">Roll-No</label>
                 <input type="text" id="editRollNo" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="editPlayerBranch">Branch</label>
+                <select id="editPlayerBranch" class="form-input" style="cursor: pointer;">
+                    <option value="">None / Not Specified</option>
+                    <option value="CS">CS</option>
+                    <option value="CSE">CSE</option>
+                    <option value="MnC">MnC</option>
+                    <option value="EE">EE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="ME">ME</option>
+                </select>
             </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeEditPlayerModal()">Cancel</button>

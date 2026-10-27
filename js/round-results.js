@@ -117,10 +117,11 @@ function renderMatchTable(matches) {
             <tr>
                 <td><strong>#${m.match_number}</strong></td>
                 <td>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <span class="player-color-dot white-piece" style="width:10px;height:10px;"></span>
                         <span>${m.white_player?.player_name || '—'}</span>
                         <span style="color: var(--white-30); font-size: 0.75rem;">(${m.white_player?.roll_no || m.white_player?.player_id || ''})</span>
+                        ${m.white_player?.branch ? `<span class="badge badge-branch">${m.white_player.branch}</span>` : ''}
                     </div>
                     <div style="font-size: 0.8rem; color: var(--white-50); margin-top: 2px;">
                         ${m.status === 'completed' ? m.white_points + ' pt' : '—'}
@@ -128,10 +129,11 @@ function renderMatchTable(matches) {
                 </td>
                 <td><span class="badge ${resultBadgeClass}">${formatResult(m.result)}</span></td>
                 <td>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <span class="player-color-dot black-piece" style="width:10px;height:10px;"></span>
                         <span>${m.black_player?.player_name || '—'}</span>
                         <span style="color: var(--white-30); font-size: 0.75rem;">(${m.black_player?.roll_no || m.black_player?.player_id || ''})</span>
+                        ${m.black_player?.branch ? `<span class="badge badge-branch">${m.black_player.branch}</span>` : ''}
                     </div>
                     <div style="font-size: 0.8rem; color: var(--white-50); margin-top: 2px;">
                         ${m.status === 'completed' ? m.black_points + ' pt' : '—'}
@@ -178,7 +180,7 @@ function renderMatchCards(matches, roundNumber) {
                         <div class="player-info">
                             <div class="player-color-dot white-piece"></div>
                             <div>
-                                <div class="player-name">${m.white_player?.player_name || '—'}</div>
+                                <div class="player-name">${m.white_player?.player_name || '—'} ${m.white_player?.branch ? `<span class="badge badge-branch" style="font-size: 0.7rem; padding: 1px 6px;">${m.white_player.branch}</span>` : ''}</div>
                                 ${isWhiteWinner ? '<span class="badge badge-win" style="margin-top: 4px;">WINNER</span>' : ''}
                             </div>
                         </div>
@@ -192,7 +194,7 @@ function renderMatchCards(matches, roundNumber) {
                         <div class="player-info">
                             <div class="player-color-dot black-piece"></div>
                             <div>
-                                <div class="player-name">${m.black_player?.player_name || '—'}</div>
+                                <div class="player-name">${m.black_player?.player_name || '—'} ${m.black_player?.branch ? `<span class="badge badge-branch" style="font-size: 0.7rem; padding: 1px 6px;">${m.black_player.branch}</span>` : ''}</div>
                                 ${isBlackWinner ? '<span class="badge badge-win" style="margin-top: 4px;">WINNER</span>' : ''}
                             </div>
                         </div>
@@ -214,7 +216,7 @@ function renderStandings(standings) {
     if (standings.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="4">
+                <td colspan="6">
                     <div class="empty-state" style="padding: 30px;">
                         <p>No standings data</p>
                     </div>
@@ -226,7 +228,9 @@ function renderStandings(standings) {
     tbody.innerHTML = standings.map((s, i) => `
         <tr>
             <td class="rank-cell ${s.rank === 1 ? 'rank-1' : ''} col-center">${s.rank !== null && s.rank !== undefined ? s.rank : '—'}</td>
-            <td><strong>${s.player_name}</strong> <span style="color: var(--white-30); font-size: 0.8rem;">(${s.roll_no || s.player_code})</span></td>
+            <td><strong>${s.player_name}</strong></td>
+            <td class="col-center">${s.roll_no || s.player_code || '—'}</td>
+            <td class="col-center"><span class="badge badge-branch">${s.branch || '—'}</span></td>
             <td class="points-highlight col-center">${s.round_points}</td>
             <td class="col-center">${s.overall_rank !== null && s.overall_rank !== undefined ? s.overall_rank : '—'}</td>
         </tr>

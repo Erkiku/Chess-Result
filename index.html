@@ -61,6 +61,7 @@
                             <th class="col-center">Rank</th>
                             <th>Player</th>
                             <th>Roll-No</th>
+                            <th class="col-center">Branch</th>
                             <th class="col-center">Points</th>
                             <th class="col-center">Played</th>
                             <th class="col-center">W</th>
@@ -70,7 +71,7 @@
                     </thead>
                     <tbody id="leaderboardBody">
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div class="loading">
                                     <div class="spinner"></div>
                                     <span>Loading standings...</span>
@@ -143,7 +144,7 @@
                     <div class="podium-badge">🏆 Winner</div>
                     <div class="podium-rank">#1</div>
                     <div class="podium-name">${winner.player_name}</div>
-                    <div class="podium-roll">Roll-No: ${winner.roll_no || winner.player_code}</div>
+                    <div class="podium-roll">Roll-No: ${winner.roll_no || winner.player_code}${winner.branch ? ' · Branch: ' + winner.branch : ''}</div>
                     <div class="podium-points">${winner.total_points} pts</div>
                     <div class="podium-meta">${winner.wins}W · ${winner.draws}D · ${winner.losses}L (${winner.matches_played} matches)</div>
                 </div>
@@ -153,7 +154,7 @@
                     <div class="podium-badge">🥈 Runner Up</div>
                     <div class="podium-rank">#2</div>
                     <div class="podium-name">${runnerUp.player_name}</div>
-                    <div class="podium-roll">Roll-No: ${runnerUp.roll_no || runnerUp.player_code}</div>
+                    <div class="podium-roll">Roll-No: ${runnerUp.roll_no || runnerUp.player_code}${runnerUp.branch ? ' · Branch: ' + runnerUp.branch : ''}</div>
                     <div class="podium-points">${runnerUp.total_points} pts</div>
                     <div class="podium-meta">${runnerUp.wins}W · ${runnerUp.draws}D · ${runnerUp.losses}L (${runnerUp.matches_played} matches)</div>
                 </div>
@@ -163,7 +164,7 @@
         function renderLeaderboard(data) {
             const tbody = document.getElementById('leaderboardBody');
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p>No players registered</p></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><p>No players registered</p></div></td></tr>`;
                 return;
             }
             tbody.innerHTML = data.map((p, i) => `
@@ -171,6 +172,7 @@
                     <td class="rank-cell ${p.rank === 1 ? 'rank-1' : ''} col-center">${p.rank !== null && p.rank !== undefined ? p.rank : '—'}</td>
                     <td><strong>${p.player_name}</strong></td>
                     <td style="color: var(--white-50); font-family: monospace;">${p.roll_no || p.player_code}</td>
+                    <td class="col-center"><span class="badge badge-branch">${p.branch || '—'}</span></td>
                     <td class="points-highlight col-center">${p.total_points}</td>
                     <td class="col-center">${p.matches_played}</td>
                     <td class="col-center">${p.wins}</td>

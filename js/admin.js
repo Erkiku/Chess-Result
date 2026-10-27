@@ -131,13 +131,14 @@ async function loadAdminPlayers() {
 function renderPlayersTable(players) {
     const tbody = document.getElementById('adminPlayersTableBody');
     if (players.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><p>No players found</p></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><p>No players found</p></td></tr>`;
         return;
     }
 
     tbody.innerHTML = players.map(p => `
         <tr>
             <td><strong style="color: var(--blue-400); font-family: monospace;">${p.roll_no || p.player_id}</strong></td>
+            <td><span class="badge badge-branch">${p.branch || '—'}</span></td>
             <td><strong>${p.player_name}</strong></td>
             <td><span class="badge badge-completed">Active</span></td>
             <td style="text-align: right;">
@@ -173,6 +174,7 @@ function filterAdminPlayers() {
     const filtered = allPlayersList.filter(p => 
         p.player_name.toLowerCase().includes(q) || 
         (p.roll_no && p.roll_no.toLowerCase().includes(q)) ||
+        (p.branch && p.branch.toLowerCase().includes(q)) ||
         (p.player_id && p.player_id.toLowerCase().includes(q))
     );
     renderPlayersTable(filtered);
@@ -183,6 +185,8 @@ function openAddPlayerModal() {
     document.getElementById('newPlayerName').value = '';
     const nextNum = allPlayersList.length + 1;
     document.getElementById('newRollNo').value = `P${String(nextNum).padStart(3, '0')}`;
+    const branchSelect = document.getElementById('newPlayerBranch');
+    if (branchSelect) branchSelect.value = '';
     document.getElementById('addPlayerModal').classList.add('visible');
     document.getElementById('newPlayerName').focus();
 }
@@ -194,6 +198,7 @@ function closeAddPlayerModal() {
 async function handleAddPlayerSubmit() {
     const name = document.getElementById('newPlayerName').value.trim();
     const rollNo = document.getElementById('newRollNo').value.trim();
+    const branch = document.getElementById('newPlayerBranch')?.value || null;
 
     if (!name || !rollNo) {
         showToast('Please enter both Player Name and Roll-No', true);
@@ -203,7 +208,8 @@ async function handleAddPlayerSubmit() {
     try {
         await addParticipant(DEFAULT_TOURNAMENT_ID, {
             player_name: name,
-            roll_no: rollNo
+            roll_no: rollNo,
+            branch: branch
         });
         showToast(`Player "${name}" added successfully!`);
         closeAddPlayerModal();
@@ -222,6 +228,8 @@ function openEditPlayerModal(id) {
     document.getElementById('editPlayerRecordId').value = p.id;
     document.getElementById('editPlayerName').value = p.player_name;
     document.getElementById('editRollNo').value = p.roll_no || p.player_id || '';
+    const branchSelect = document.getElementById('editPlayerBranch');
+    if (branchSelect) branchSelect.value = p.branch || '';
     document.getElementById('editPlayerModal').classList.add('visible');
 }
 
@@ -233,6 +241,7 @@ async function handleEditPlayerSubmit() {
     const id = document.getElementById('editPlayerRecordId').value;
     const name = document.getElementById('editPlayerName').value.trim();
     const rollNo = document.getElementById('editRollNo').value.trim();
+    const branch = document.getElementById('editPlayerBranch')?.value || null;
 
     if (!name || !rollNo) {
         showToast('Please enter both name and Roll-No', true);
@@ -242,7 +251,8 @@ async function handleEditPlayerSubmit() {
     try {
         await updateParticipant(id, {
             player_name: name,
-            roll_no: rollNo
+            roll_no: rollNo,
+            branch: branch
         });
         showToast('Player updated successfully!');
         closeEditPlayerModal();
@@ -291,7 +301,7 @@ function populatePlayerDropdowns() {
     const blackSelect = document.getElementById('pairingBlackPlayer');
 
     const options = allPlayersList.map(p => 
-        `<option value="${p.id}">${p.player_name} (${p.roll_no || p.player_id})</option>`
+        `<option value="${p.id}">${p.player_name} (${p.roll_no || p.player_id}${p.branch ? ' · ' + p.branch : ''})</option>`
     ).join('');
 
     whiteSelect.innerHTML = `<option value="">Select White Player</option>` + options;

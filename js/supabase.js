@@ -43,25 +43,28 @@ async function getParticipants(tournamentId) {
     return data;
 }
 
-async function addParticipant(tournamentId, { player_name, roll_no }) {
+async function addParticipant(tournamentId, { player_name, roll_no, branch }) {
+    const payload = {
+        tournament_id: tournamentId,
+        player_name: player_name.trim(),
+        roll_no: roll_no.trim().toUpperCase(),
+        branch: branch ? branch.trim() : null,
+        is_active: true
+    };
     const { data, error } = await db
         .from('participants')
-        .insert([{
-            tournament_id: tournamentId,
-            player_name: player_name.trim(),
-            roll_no: roll_no.trim().toUpperCase(),
-            is_active: true
-        }])
+        .insert([payload])
         .select()
         .single();
     if (error) throw error;
     return data;
 }
 
-async function updateParticipant(id, { player_name, roll_no }) {
+async function updateParticipant(id, { player_name, roll_no, branch }) {
     const updates = {};
     if (player_name) updates.player_name = player_name.trim();
     if (roll_no) updates.roll_no = roll_no.trim().toUpperCase();
+    if (branch !== undefined) updates.branch = branch ? branch.trim() : null;
 
     const { data, error } = await db
         .from('participants')
@@ -137,8 +140,8 @@ async function getMatchesByRound(tournamentId, roundNumber) {
         .from('matches')
         .select(`
             *,
-            white_player:participants!matches_white_player_id_fkey(id, player_name, roll_no),
-            black_player:participants!matches_black_player_id_fkey(id, player_name, roll_no)
+            white_player:participants!matches_white_player_id_fkey(id, player_name, roll_no, branch),
+            black_player:participants!matches_black_player_id_fkey(id, player_name, roll_no, branch)
         `)
         .eq('tournament_id', tournamentId)
         .eq('round_number', roundNumber)
@@ -153,8 +156,8 @@ async function getAllMatches(tournamentId) {
         .from('matches')
         .select(`
             *,
-            white_player:participants!matches_white_player_id_fkey(id, player_name, roll_no),
-            black_player:participants!matches_black_player_id_fkey(id, player_name, roll_no)
+            white_player:participants!matches_white_player_id_fkey(id, player_name, roll_no, branch),
+            black_player:participants!matches_black_player_id_fkey(id, player_name, roll_no, branch)
         `)
         .eq('tournament_id', tournamentId)
         .order('round_number')
@@ -256,8 +259,8 @@ async function updateMatchResult(matchId, result) {
         .eq('id', matchId)
         .select(`
             *,
-            white_player:participants!matches_white_player_id_fkey(id, player_name, roll_no),
-            black_player:participants!matches_black_player_id_fkey(id, player_name, roll_no)
+            white_player:participants!matches_white_player_id_fkey(id, player_name, roll_no, branch),
+            black_player:participants!matches_black_player_id_fkey(id, player_name, roll_no, branch)
         `)
         .single();
     if (error) throw error;
@@ -279,6 +282,7 @@ async function getLeaderboard(tournamentId) {
             player_name: p.player_name,
             roll_no: p.roll_no,
             player_code: p.roll_no,
+            branch: p.branch || null,
             total_points: 0,
             matches_played: 0,
             wins: 0,
@@ -349,6 +353,7 @@ async function getRoundStandings(tournamentId, roundNumber) {
             player_name: p.player_name,
             roll_no: p.roll_no,
             player_code: p.roll_no,
+            branch: p.branch || null,
             round_points: 0,
             round_matches_played: 0,
             overall_rank: overallRankMap[p.id] !== undefined ? overallRankMap[p.id] : null,
