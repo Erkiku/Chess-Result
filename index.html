@@ -19,9 +19,9 @@
             </a>
             <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
             <ul class="navbar-links" id="navLinks">
-                <li><a href="index.html" class="active">Leaderboard</a></li>
-                <li><a href="round-results.html">Round Results</a></li>
-                <li><a href="admin.html">Admin</a></li>
+                <li><a href="index.html" class="active"><span class="nav-icon">🏆</span> Leaderboard</a></li>
+                <li><a href="round-results.html"><span class="nav-icon">⚔️</span> Round Results</a></li>
+                <li><a href="admin.html"><span class="nav-icon">🛡️</span> Admin</a></li>
             </ul>
         </div>
     </nav>
@@ -57,11 +57,11 @@
                             <th>Rank</th>
                             <th>Player</th>
                             <th>Roll-No</th>
-                            <th>Points</th>
-                            <th>Played</th>
-                            <th>W</th>
-                            <th>D</th>
-                            <th>L</th>
+                            <th class="col-center">Points</th>
+                            <th class="col-center">Played</th>
+                            <th class="col-center">W</th>
+                            <th class="col-center">D</th>
+                            <th class="col-center">L</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboardBody">
@@ -167,11 +167,11 @@
                     <td class="rank-cell ${i === 0 ? 'rank-1' : ''}">${i + 1}</td>
                     <td><strong>${p.player_name}</strong></td>
                     <td style="color: var(--white-50); font-family: monospace;">${p.roll_no || p.player_code}</td>
-                    <td class="points-highlight">${p.total_points}</td>
-                    <td>${p.matches_played}</td>
-                    <td>${p.wins}</td>
-                    <td>${p.draws}</td>
-                    <td>${p.losses}</td>
+                    <td class="points-highlight col-center">${p.total_points}</td>
+                    <td class="col-center">${p.matches_played}</td>
+                    <td class="col-center">${p.wins}</td>
+                    <td class="col-center">${p.draws}</td>
+                    <td class="col-center">${p.losses}</td>
                 </tr>
             `).join('');
         }

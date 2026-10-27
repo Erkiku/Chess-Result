@@ -181,11 +181,14 @@ body.leaderboard-page .card {
 .navbar-links {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     list-style: none;
 }
 
 .navbar-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     color: var(--white-70);
     text-decoration: none;
     padding: 8px 16px;
@@ -194,6 +197,21 @@ body.leaderboard-page .card {
     font-weight: 500;
     transition: all var(--transition-fast);
     position: relative;
+}
+
+.nav-icon {
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.col-center,
+th.col-center,
+td.col-center {
+    text-align: center;
 }
 
 .navbar-links a:hover {
@@ -529,6 +547,17 @@ tbody tr:last-child td {
 @keyframes pulse-badge {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
+}
+
+@keyframes mobileNavFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ========================
@@ -1109,29 +1138,118 @@ tbody tr:last-child td {
 
 @media (max-width: 768px) {
     .nav-toggle {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--white-15);
+        border-radius: var(--radius-md);
+        color: var(--white);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0;
+        transition: all var(--transition-fast);
     }
 
+    .nav-toggle:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: var(--blue-400);
+    }
+
+    /* GitHub-style mobile navigation card */
     .navbar-links {
         display: none;
         position: absolute;
-        top: 64px;
-        left: 0;
-        right: 0;
+        top: calc(100% + 8px);
+        left: 14px;
+        right: 14px;
         flex-direction: column;
-        background: rgba(10, 10, 15, 0.98);
+        background: #0d1117;
         backdrop-filter: blur(20px);
-        padding: 16px;
-        border-bottom: 1px solid var(--white-10);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 10px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(59, 130, 246, 0.15);
         gap: 4px;
+        list-style: none;
+        z-index: 200;
+        animation: mobileNavFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .navbar-links.open {
         display: flex;
     }
 
+    .navbar-links li {
+        width: 100%;
+    }
+
+    .navbar-links a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 8px;
+        color: var(--white-90);
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none;
+        position: relative;
+        background: transparent;
+        transition: all var(--transition-fast);
+    }
+
+    .navbar-links a:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+    }
+
+    /* Active link matching the mobile drawer indicator */
+    .navbar-links a.active {
+        background: rgba(59, 130, 246, 0.15);
+        color: #ffffff;
+        font-weight: 600;
+    }
+
+    .navbar-links a.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 6px;
+        bottom: 6px;
+        width: 4px;
+        background: var(--blue-500);
+        border-radius: 0 4px 4px 0;
+        box-shadow: 0 0 8px var(--blue-500);
+    }
+
     .navbar-links a.active::after {
         display: none;
+    }
+
+    .nav-icon {
+        font-size: 1.15rem;
+        width: 22px;
+    }
+
+    /* Mobile view: Points, Played, Win, Draw, Loss centered in table */
+    table th:nth-child(4),
+    table td:nth-child(4),
+    table th:nth-child(5),
+    table td:nth-child(5),
+    table th:nth-child(6),
+    table td:nth-child(6),
+    table th:nth-child(7),
+    table td:nth-child(7),
+    table th:nth-child(8),
+    table td:nth-child(8),
+    .points-highlight,
+    .col-center {
+        text-align: center !important;
     }
 
     .page-title {

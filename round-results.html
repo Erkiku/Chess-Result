@@ -20,9 +20,9 @@
             </a>
             <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
             <ul class="navbar-links" id="navLinks">
-                <li><a href="index.html">Leaderboard</a></li>
-                <li><a href="round-results.html" class="active">Round Results</a></li>
-                <li><a href="admin.html">Admin</a></li>
+                <li><a href="index.html"><span class="nav-icon">🏆</span> Leaderboard</a></li>
+                <li><a href="round-results.html" class="active"><span class="nav-icon">⚔️</span> Round Results</a></li>
+                <li><a href="admin.html"><span class="nav-icon">🛡️</span> Admin</a></li>
             </ul>
         </div>
     </nav>
@@ -118,10 +118,10 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Rank</th>
+                            <th class="col-center">Rank</th>
                             <th>Player</th>
-                            <th>Round Points</th>
-                            <th>Overall Rank</th>
+                            <th class="col-center">Round Points</th>
+                            <th class="col-center">Overall Rank</th>
                         </tr>
                     </thead>
                     <tbody id="standingsBody">
