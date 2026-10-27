@@ -115,6 +115,7 @@ function switchAdminTab(tabName) {
 async function loadAdminPlayers() {
     const tbody = document.getElementById('adminPlayersTableBody');
     try {
+        await purgeInactiveParticipants();
         const players = await getParticipants(DEFAULT_TOURNAMENT_ID);
         allPlayersList = players || [];
         
@@ -254,13 +255,15 @@ async function handleEditPlayerSubmit() {
 
 function promptDeletePlayer(id, name) {
     document.getElementById('confirmTitle').textContent = '🗑️ Delete Player';
-    document.getElementById('confirmMessage').innerHTML = `Are you sure you want to remove <strong>${name}</strong>? If this player has past matches, their profile will be deactivated to maintain tournament history.`;
+    document.getElementById('confirmMessage').innerHTML = `Are you sure you want to completely remove <strong>${name}</strong>? All their matches and records will be permanently deleted from the database.`;
     
     pendingActionCallback = async () => {
         try {
             await deleteParticipant(id);
-            showToast(`Player "${name}" removed.`);
-            loadAdminPlayers();
+            showToast(`Player "${name}" and all their records have been completely removed.`);
+            await loadAdminPlayers();
+            loadPairings(pairingCurrentRound);
+            loadAdminRound(adminCurrentRound);
         } catch (err) {
             console.error('Error deleting player:', err);
             showToast('Failed to delete player', true);

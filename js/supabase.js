@@ -74,27 +74,57 @@ async function updateParticipant(id, { player_name, roll_no }) {
 }
 
 async function deleteParticipant(id) {
-    const { data: matches, error: checkError } = await db
-        .from('matches')
-        .select('id')
-        .or(`white_player_id.eq.${id},black_player_id.eq.${id}`);
-    
-    if (matches && matches.length > 0) {
-        const { data, error } = await db
-            .from('participants')
-            .update({ is_active: false })
-            .eq('id', id)
-            .select()
-            .single();
-        if (error) throw error;
-        return { softDeleted: true, data };
-    } else {
+    try {
+        // 1. Find all matches where this player participates (as white or black)
+        const { data: matches } = await db
+            .from('matches')
+            .select('id')
+            .or(`white_player_id.eq.${id},black_player_id.eq.${id}`);
+        
+        if (matches && matches.length > 0) {
+            const matchIds = matches.map(m => m.id);
+            
+            // 2. Cascade delete result history for these matches
+            await db
+                .from('result_history')
+                .delete()
+                .in('match_id', matchIds);
+            
+            // 3. Cascade delete all matches involving this player
+            await db
+                .from('matches')
+                .delete()
+                .in('id', matchIds);
+        }
+
+        // 4. Completely and permanently delete participant from database
         const { data, error } = await db
             .from('participants')
             .delete()
             .eq('id', id);
         if (error) throw error;
         return { deleted: true, data };
+    } catch (err) {
+        console.error('Error during hard delete of participant:', err);
+        throw err;
+    }
+}
+
+// Purge any residual inactive or unregistered players and their orphaned records
+async function purgeInactiveParticipants() {
+    try {
+        const { data: inactive } = await db
+            .from('participants')
+            .select('id')
+            .eq('is_active', false);
+        
+        if (inactive && inactive.length > 0) {
+            for (const p of inactive) {
+                await deleteParticipant(p.id);
+            }
+        }
+    } catch (err) {
+        console.warn('Purge error:', err);
     }
 }
 
@@ -114,7 +144,8 @@ async function getMatchesByRound(tournamentId, roundNumber) {
         .eq('round_number', roundNumber)
         .order('match_number');
     if (error) throw error;
-    return data;
+    // Only return matches where BOTH players are registered participants
+    return (data || []).filter(m => m.white_player && m.black_player);
 }
 
 async function getAllMatches(tournamentId) {
@@ -129,7 +160,8 @@ async function getAllMatches(tournamentId) {
         .order('round_number')
         .order('match_number');
     if (error) throw error;
-    return data;
+    // Only return matches where BOTH players are registered participants
+    return (data || []).filter(m => m.white_player && m.black_player);
 }
 
 async function createMatch({ tournament_id, round_number, match_number, white_player_id, black_player_id, is_published = true }) {
@@ -178,12 +210,22 @@ async function updateMatchPairing(matchId, { white_player_id, black_player_id, m
 }
 
 async function deleteMatch(matchId) {
-    const { data, error } = await db
-        .from('matches')
-        .delete()
-        .eq('id', matchId);
-    if (error) throw error;
-    return data;
+    try {
+        await db
+            .from('result_history')
+            .delete()
+            .eq('match_id', matchId);
+
+        const { data, error } = await db
+            .from('matches')
+            .delete()
+            .eq('id', matchId);
+        if (error) throw error;
+        return data;
+    } catch (err) {
+        console.error('Error deleting match:', err);
+        throw err;
+    }
 }
 
 async function setRoundPublication(tournamentId, roundNumber, isPublished) {
