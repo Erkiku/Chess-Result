@@ -266,7 +266,23 @@ async function getLeaderboard(tournamentId) {
         }
     });
 
-    return Object.values(playerStats).sort((a, b) => b.total_points - a.total_points);
+    // Sort: players who played at least 1 match first by points desc, then players with 0 matches
+    const sorted = Object.values(playerStats).sort((a, b) => {
+        if (a.matches_played > 0 && b.matches_played === 0) return -1;
+        if (a.matches_played === 0 && b.matches_played > 0) return 1;
+        return b.total_points - a.total_points;
+    });
+
+    let currentRank = 1;
+    sorted.forEach(p => {
+        if (p.matches_played >= 1) {
+            p.rank = currentRank++;
+        } else {
+            p.rank = null;
+        }
+    });
+
+    return sorted;
 }
 
 // ========================
@@ -277,6 +293,13 @@ async function getRoundStandings(tournamentId, roundNumber) {
     const allMatches = await getAllMatches(tournamentId);
     const participants = await getParticipants(tournamentId);
 
+    // Get overall tournament rankings to map overall_rank
+    const overallLeaderboard = await getLeaderboard(tournamentId);
+    const overallRankMap = {};
+    overallLeaderboard.forEach(p => {
+        overallRankMap[p.player_id] = p.rank;
+    });
+
     const standings = {};
     participants.forEach(p => {
         standings[p.id] = {
@@ -284,24 +307,44 @@ async function getRoundStandings(tournamentId, roundNumber) {
             player_name: p.player_name,
             roll_no: p.roll_no,
             player_code: p.roll_no,
-            round_points: 0
+            round_points: 0,
+            round_matches_played: 0,
+            overall_rank: overallRankMap[p.id] !== undefined ? overallRankMap[p.id] : null,
+            rank: null
         };
     });
 
-    // Calculate round points
+    // Calculate round points & round games played
     allMatches.forEach(m => {
         if (m.status === 'completed' && m.round_number === roundNumber) {
             if (standings[m.white_player_id]) {
                 standings[m.white_player_id].round_points += parseFloat(m.white_points);
+                standings[m.white_player_id].round_matches_played++;
             }
             if (standings[m.black_player_id]) {
                 standings[m.black_player_id].round_points += parseFloat(m.black_points);
+                standings[m.black_player_id].round_matches_played++;
             }
         }
     });
 
-    const sorted = Object.values(standings).sort((a, b) => b.round_points - a.round_points);
-    sorted.forEach((s, i) => s.rank = i + 1);
+    // Sort: players who played at least 1 match in this round first by round_points desc, then unplayed
+    const sorted = Object.values(standings).sort((a, b) => {
+        if (a.round_matches_played > 0 && b.round_matches_played === 0) return -1;
+        if (a.round_matches_played === 0 && b.round_matches_played > 0) return 1;
+        return b.round_points - a.round_points;
+    });
+
+    // Only assign round rank if the player played at least one game in this round; otherwise rank is null
+    let currentRoundRank = 1;
+    sorted.forEach(s => {
+        if (s.round_matches_played >= 1) {
+            s.rank = currentRoundRank++;
+        } else {
+            s.rank = null;
+        }
+    });
+
     return sorted;
 }
 

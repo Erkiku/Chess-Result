@@ -225,10 +225,10 @@ function renderStandings(standings) {
 
     tbody.innerHTML = standings.map((s, i) => `
         <tr>
-            <td class="rank-cell ${i === 0 ? 'rank-1' : ''} col-center">${s.rank}</td>
+            <td class="rank-cell ${s.rank === 1 ? 'rank-1' : ''} col-center">${s.rank !== null && s.rank !== undefined ? s.rank : '—'}</td>
             <td><strong>${s.player_name}</strong> <span style="color: var(--white-30); font-size: 0.8rem;">(${s.roll_no || s.player_code})</span></td>
             <td class="points-highlight col-center">${s.round_points}</td>
-            <td class="col-center">${s.rank}</td>
+            <td class="col-center">${s.overall_rank !== null && s.overall_rank !== undefined ? s.overall_rank : '—'}</td>
         </tr>
     `).join('');
 }

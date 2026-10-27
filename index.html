@@ -54,7 +54,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Rank</th>
+                            <th class="col-center">Rank</th>
                             <th>Player</th>
                             <th>Roll-No</th>
                             <th class="col-center">Points</th>
@@ -164,7 +164,7 @@
             }
             tbody.innerHTML = data.map((p, i) => `
                 <tr>
-                    <td class="rank-cell ${i === 0 ? 'rank-1' : ''}">${i + 1}</td>
+                    <td class="rank-cell ${p.rank === 1 ? 'rank-1' : ''} col-center">${p.rank !== null && p.rank !== undefined ? p.rank : '—'}</td>
                     <td><strong>${p.player_name}</strong></td>
                     <td style="color: var(--white-50); font-family: monospace;">${p.roll_no || p.player_code}</td>
                     <td class="points-highlight col-center">${p.total_points}</td>
