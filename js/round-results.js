@@ -122,6 +122,18 @@ function renderRoundStatus(status, summary) {
     counter.innerHTML = `<strong>${summary.completed}</strong> of <strong>${summary.total}</strong> matches completed`;
 }
 
+function getResultBadgeHtml(result) {
+    if (result === 'white_wins') {
+        return `<span class="match-result-badge white-wins"><span class="result-dot"></span> White Wins</span>`;
+    } else if (result === 'black_wins') {
+        return `<span class="match-result-badge black-wins"><span class="result-dot"></span> Black Wins</span>`;
+    } else if (result === 'draw') {
+        return `<span class="match-result-badge draw">🤝 Draw</span>`;
+    } else {
+        return `<span class="match-result-badge pending">⏳ Pending</span>`;
+    }
+}
+
 function renderMatchTable(matches) {
     const tbody = document.getElementById('matchTableBody');
 
@@ -141,22 +153,10 @@ function renderMatchTable(matches) {
     tbody.innerHTML = matches.map(m => {
         const isWhiteWinner = m.result === 'white_wins';
         const isBlackWinner = m.result === 'black_wins';
-        const isDraw = m.result === 'draw';
-
-        let resultBadgeHtml = '';
-        if (isWhiteWinner) {
-            resultBadgeHtml = `<span class="badge badge-win" style="font-weight:700;"><span class="player-color-dot white-piece" style="width:8px;height:8px;display:inline-block;margin-right:4px;"></span> White Wins</span>`;
-        } else if (isBlackWinner) {
-            resultBadgeHtml = `<span class="badge badge-win" style="font-weight:700;"><span class="player-color-dot black-piece" style="width:8px;height:8px;display:inline-block;margin-right:4px;"></span> Black Wins</span>`;
-        } else if (isDraw) {
-            resultBadgeHtml = `<span class="badge badge-draw">🤝 Draw</span>`;
-        } else {
-            resultBadgeHtml = `<span class="badge badge-pending">Pending</span>`;
-        }
 
         return `
             <tr>
-                <td><strong>#${m.match_number}</strong></td>
+                <td class="col-center"><strong>#${m.match_number}</strong></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <span class="player-color-dot white-piece" title="White Piece" style="width:11px;height:11px;"></span>
@@ -170,7 +170,7 @@ function renderMatchTable(matches) {
                         ${m.status === 'completed' ? (isWhiteWinner ? `${m.white_points} pt (Won)` : `${m.white_points} pt`) : '—'}
                     </div>
                 </td>
-                <td>${resultBadgeHtml}</td>
+                <td class="col-center">${getResultBadgeHtml(m.result)}</td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <span class="player-color-dot black-piece" title="Black Piece" style="width:11px;height:11px;"></span>
@@ -184,7 +184,7 @@ function renderMatchTable(matches) {
                         ${m.status === 'completed' ? (isBlackWinner ? `${m.black_points} pt (Won)` : `${m.black_points} pt`) : '—'}
                     </div>
                 </td>
-                <td><strong style="${isWhiteWinner || isBlackWinner ? 'color: var(--win-color);' : ''}">${getWinner(m)}</strong></td>
+                <td class="col-center"><strong style="${isWhiteWinner || isBlackWinner ? 'color: var(--win-color);' : ''}">${getWinner(m)}</strong></td>
             </tr>
         `;
     }).join('');
@@ -210,22 +210,11 @@ function renderMatchCards(matches, roundNumber) {
 
         const cardClass = isPending ? 'pending' : isDraw ? 'draw' : 'win';
 
-        let resultBadgeHtml = '';
-        if (isWhiteWinner) {
-            resultBadgeHtml = `<span class="badge badge-win" style="font-weight:700;"><span class="player-color-dot white-piece" style="width:8px;height:8px;display:inline-block;margin-right:4px;"></span> White Wins</span>`;
-        } else if (isBlackWinner) {
-            resultBadgeHtml = `<span class="badge badge-win" style="font-weight:700;"><span class="player-color-dot black-piece" style="width:8px;height:8px;display:inline-block;margin-right:4px;"></span> Black Wins</span>`;
-        } else if (isDraw) {
-            resultBadgeHtml = `<span class="badge badge-draw">DRAW</span>`;
-        } else {
-            resultBadgeHtml = `<span class="badge badge-pending">Pending</span>`;
-        }
-
         return `
             <div class="match-card ${cardClass}">
                 <div class="match-card-header">
                     <span class="match-card-label">Match ${String(m.match_number).padStart(2, '0')} · Round ${roundNumber}</span>
-                    ${resultBadgeHtml}
+                    ${getResultBadgeHtml(m.result)}
                 </div>
 
                 <div class="match-card-players">
