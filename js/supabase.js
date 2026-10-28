@@ -339,13 +339,6 @@ async function getRoundStandings(tournamentId, roundNumber) {
     const allMatches = await getAllMatches(tournamentId);
     const participants = await getParticipants(tournamentId);
 
-    // Get overall tournament rankings to map overall_rank
-    const overallLeaderboard = await getLeaderboard(tournamentId);
-    const overallRankMap = {};
-    overallLeaderboard.forEach(p => {
-        overallRankMap[p.player_id] = p.rank;
-    });
-
     const standings = {};
     participants.forEach(p => {
         standings[p.id] = {
@@ -356,7 +349,6 @@ async function getRoundStandings(tournamentId, roundNumber) {
             branch: p.branch || null,
             round_points: 0,
             round_matches_played: 0,
-            overall_rank: overallRankMap[p.id] !== undefined ? overallRankMap[p.id] : null,
             rank: null
         };
     });

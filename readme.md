@@ -111,7 +111,6 @@ Display:
 - Points earned in the selected round.
 - Cumulative points before the selected round.
 - Cumulative points after the selected round.
-- Current overall rank.
 
 Calculate all scores from valid completed match records. Do not allow administrators to manually enter aggregate points.
 

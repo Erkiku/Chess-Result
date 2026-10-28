@@ -243,7 +243,7 @@ function renderStandings(standings) {
     if (standings.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6">
+                <td colspan="5">
                     <div class="empty-state" style="padding: 30px;">
                         <p>No standings data</p>
                     </div>
@@ -259,7 +259,6 @@ function renderStandings(standings) {
             <td class="col-center">${s.roll_no || s.player_code || '—'}</td>
             <td class="col-center"><span class="badge badge-branch">${s.branch || '—'}</span></td>
             <td class="points-highlight col-center">${s.round_points}</td>
-            <td class="col-center">${s.overall_rank !== null && s.overall_rank !== undefined ? s.overall_rank : '—'}</td>
         </tr>
     `).join('');
 }
