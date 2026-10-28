@@ -110,6 +110,9 @@ function renderMatchTable(matches) {
     }
 
     tbody.innerHTML = matches.map(m => {
+        const isWhiteWinner = m.result === 'white_wins';
+        const isBlackWinner = m.result === 'black_wins';
+        const isDraw = m.result === 'draw';
         const resultBadgeClass = m.result === 'pending' ? 'badge-pending' :
                                  m.result === 'draw' ? 'badge-draw' : 'badge-win';
 
@@ -118,28 +121,30 @@ function renderMatchTable(matches) {
                 <td><strong>#${m.match_number}</strong></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span class="player-color-dot white-piece" style="width:10px;height:10px;"></span>
-                        <span>${m.white_player?.player_name || '—'}</span>
+                        <span class="player-color-dot white-piece" title="White Piece" style="width:11px;height:11px;"></span>
+                        <span style="${isWhiteWinner ? 'font-weight: 700; color: var(--white);' : ''}">${m.white_player?.player_name || '—'}</span>
                         <span style="color: var(--white-30); font-size: 0.75rem;">(${m.white_player?.roll_no || m.white_player?.player_id || ''})</span>
                         ${m.white_player?.branch ? `<span class="badge badge-branch">${m.white_player.branch}</span>` : ''}
+                        ${isWhiteWinner ? '<span class="badge badge-win" style="font-size: 0.65rem; padding: 1px 6px;">WINNER</span>' : ''}
                     </div>
-                    <div style="font-size: 0.8rem; color: var(--white-50); margin-top: 2px;">
+                    <div style="font-size: 0.85rem; font-weight: ${isWhiteWinner ? '800' : '600'}; color: ${isWhiteWinner ? 'var(--win-color)' : 'var(--white-50)'}; margin-top: 3px;">
                         ${m.status === 'completed' ? m.white_points + ' pt' : '—'}
                     </div>
                 </td>
                 <td><span class="badge ${resultBadgeClass}">${formatResult(m.result)}</span></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span class="player-color-dot black-piece" style="width:10px;height:10px;"></span>
-                        <span>${m.black_player?.player_name || '—'}</span>
+                        <span class="player-color-dot black-piece" title="Black Piece" style="width:11px;height:11px;"></span>
+                        <span style="${isBlackWinner ? 'font-weight: 700; color: var(--white);' : ''}">${m.black_player?.player_name || '—'}</span>
                         <span style="color: var(--white-30); font-size: 0.75rem;">(${m.black_player?.roll_no || m.black_player?.player_id || ''})</span>
                         ${m.black_player?.branch ? `<span class="badge badge-branch">${m.black_player.branch}</span>` : ''}
+                        ${isBlackWinner ? '<span class="badge badge-win" style="font-size: 0.65rem; padding: 1px 6px;">WINNER</span>' : ''}
                     </div>
-                    <div style="font-size: 0.8rem; color: var(--white-50); margin-top: 2px;">
+                    <div style="font-size: 0.85rem; font-weight: ${isBlackWinner ? '800' : '600'}; color: ${isBlackWinner ? 'var(--win-color)' : 'var(--white-50)'}; margin-top: 3px;">
                         ${m.status === 'completed' ? m.black_points + ' pt' : '—'}
                     </div>
                 </td>
-                <td>${getWinner(m)}</td>
+                <td><strong style="${isWhiteWinner || isBlackWinner ? 'color: var(--win-color);' : ''}">${getWinner(m)}</strong></td>
             </tr>
         `;
     }).join('');

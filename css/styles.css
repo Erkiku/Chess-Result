@@ -964,20 +964,32 @@ tbody tr:last-child td {
 }
 
 .player-color-dot {
-    width: 12px;
-    height: 12px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
-    border: 2px solid var(--white-30);
     flex-shrink: 0;
+    display: inline-block;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .player-color-dot.white-piece {
-    background: var(--white);
+    background: #ffffff !important;
+    border: 2px solid #94a3b8 !important;
 }
 
 .player-color-dot.black-piece {
-    background: var(--black);
-    border-color: var(--white-50);
+    background: #0f172a !important;
+    border: 2px solid #334155 !important;
+}
+
+[data-theme="light"] .player-color-dot.white-piece {
+    background: #ffffff !important;
+    border: 2px solid #64748b !important;
+}
+
+[data-theme="light"] .player-color-dot.black-piece {
+    background: #0f172a !important;
+    border: 2px solid #0f172a !important;
 }
 
 .player-name {
