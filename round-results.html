@@ -35,7 +35,23 @@
         <!-- Page Header -->
         <div class="page-header animate-in">
             <h1 class="page-title">⚔ Round <span class="accent">Results</span></h1>
-            <p class="page-subtitle">Match results, standings, and lead tracking for each round</p>
+            <p class="page-subtitle" id="roundPageSubtitle">Match results, standings, and lead tracking for each round</p>
+        </div>
+
+        <!-- Tournament Category Switcher Bar -->
+        <div class="round-category-bar animate-in">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 0.9rem; font-weight: 700; color: var(--white-70);">Tournament:</span>
+                <span class="badge badge-in-progress" id="roundCategoryBadge">Girls Championship</span>
+            </div>
+            <div class="tournament-toggle-pill" id="roundTournamentToggle">
+                <button type="button" class="tournament-toggle-btn active" id="btnRoundGirls" onclick="switchRoundCategory('girls')">
+                    👩 Girls
+                </button>
+                <button type="button" class="tournament-toggle-btn" id="btnRoundBoys" onclick="switchRoundCategory('boys')">
+                    👨 Boys
+                </button>
+            </div>
         </div>
 
         <!-- Round Tabs -->
@@ -147,8 +163,8 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="js/supabase.js?v=2.3"></script>
-    <script src="js/scoring.js?v=2.2"></script>
-    <script src="js/round-results.js?v=2.3"></script>
+    <script src="js/supabase.js?v=2.4"></script>
+    <script src="js/scoring.js?v=2.4"></script>
+    <script src="js/round-results.js?v=2.4"></script>
 </body>
 </html>

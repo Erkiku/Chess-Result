@@ -488,5 +488,61 @@ function formatTimestamp(ts) {
     });
 }
 
-// Default tournament ID (first tournament)
-const DEFAULT_TOURNAMENT_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+// ========================
+// Tournament Multi-Category Configuration
+// ========================
+
+const TOURNAMENTS = {
+    GIRLS: {
+        id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        name: 'Grand Chess Championship 2026 - Girls',
+        label: 'Girls Championship',
+        shortLabel: 'Girls',
+        key: 'girls'
+    },
+    BOYS: {
+        id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+        name: 'Grand Chess Championship 2026 - Boys',
+        label: 'Boys Championship',
+        shortLabel: 'Boys',
+        key: 'boys'
+    }
+};
+
+const DEFAULT_TOURNAMENT_ID = TOURNAMENTS.GIRLS.id;
+
+function getSelectedTournamentCategory() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const cat = (params.get('category') || params.get('cat') || params.get('tournament') || '').toLowerCase();
+        if (cat === 'boys') return 'boys';
+        if (cat === 'girls') return 'girls';
+        const saved = localStorage.getItem('chess_tournament_category');
+        if (saved === 'boys') return 'boys';
+    } catch (e) {
+        console.warn('Category read error:', e);
+    }
+    return 'girls';
+}
+
+function getSelectedTournamentId() {
+    return getSelectedTournamentCategory() === 'boys' ? TOURNAMENTS.BOYS.id : TOURNAMENTS.GIRLS.id;
+}
+
+function setSelectedTournamentCategory(category) {
+    const key = category === 'boys' ? 'boys' : 'girls';
+    try {
+        localStorage.setItem('chess_tournament_category', key);
+        const url = new URL(window.location.href);
+        url.searchParams.set('category', key);
+        window.history.replaceState({}, '', url.toString());
+    } catch (e) {
+        console.warn('Category save error:', e);
+    }
+    return key === 'boys' ? TOURNAMENTS.BOYS.id : TOURNAMENTS.GIRLS.id;
+}
+
+function getTournamentInfo(tournamentId) {
+    if (tournamentId === TOURNAMENTS.BOYS.id) return TOURNAMENTS.BOYS;
+    return TOURNAMENTS.GIRLS;
+}

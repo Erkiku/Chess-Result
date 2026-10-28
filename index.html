@@ -37,7 +37,7 @@
                 <img src="assets/udaan-logo.jpg" alt="UDAAN Chess Club Logo" class="page-header-logo">
                 <div>
                     <h1 class="page-title">UDAAN <span class="accent">Chess Tournament</span> 2026</h1>
-                    <p class="page-subtitle">Live tournament standings and player rankings</p>
+                    <p class="page-subtitle" id="pageHeaderSubtitle">Live tournament standings and player rankings</p>
                 </div>
             </div>
         </div>
@@ -49,10 +49,21 @@
 
         <!-- Full Leaderboard Table -->
         <div class="card" style="padding: 0; overflow: hidden;">
-            <div style="padding: 20px 24px; border-bottom: 1px solid var(--black-border);">
-                <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 1.15rem;">
-                    📊 Full Standings
-                </h2>
+            <div class="standings-card-header">
+                <div class="standings-title-wrap">
+                    <h2 class="standings-title">
+                        📊 Full Standings
+                    </h2>
+                    <span id="standingsCategoryBadge" class="badge badge-in-progress">UDAAN Chess [Girls]</span>
+                </div>
+                <div class="tournament-toggle-pill" id="leaderboardTournamentToggle">
+                    <button type="button" class="tournament-toggle-btn active" id="btnLeaderboardGirls" onclick="switchLeaderboardCategory('girls')">
+                        👩 Girls
+                    </button>
+                    <button type="button" class="tournament-toggle-btn" id="btnLeaderboardBoys" onclick="switchLeaderboardCategory('boys')">
+                        👨 Boys
+                    </button>
+                </div>
             </div>
             <div class="table-wrap" style="border: none; border-radius: 0;">
                 <table>
@@ -104,8 +115,8 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="js/supabase.js"></script>
-    <script src="js/scoring.js"></script>
+    <script src="js/supabase.js?v=2.4"></script>
+    <script src="js/scoring.js?v=2.4"></script>
     <script>
         // ========================
         // Index Page Logic
@@ -113,15 +124,43 @@
 
         let currentLeaderboard = [];
 
+        function updateCategoryUI(cat) {
+            const isBoys = cat === 'boys';
+            const btnGirls = document.getElementById('btnLeaderboardGirls');
+            const btnBoys = document.getElementById('btnLeaderboardBoys');
+            const badge = document.getElementById('standingsCategoryBadge');
+            const headerSubtitle = document.getElementById('pageHeaderSubtitle');
+
+            if (btnGirls) btnGirls.classList.toggle('active', !isBoys);
+            if (btnBoys) btnBoys.classList.toggle('active', isBoys);
+            if (badge) {
+                badge.textContent = isBoys ? 'UDAAN Chess [Boys]' : 'UDAAN Chess [Girls]';
+                badge.className = `badge ${isBoys ? 'badge-win' : 'badge-in-progress'}`;
+            }
+            if (headerSubtitle) {
+                headerSubtitle.textContent = `Live tournament standings and player rankings — ${isBoys ? 'Boys' : 'Girls'} Championship 2026`;
+            }
+        }
+
+        function switchLeaderboardCategory(cat) {
+            setSelectedTournamentCategory(cat);
+            updateCategoryUI(cat);
+            loadDashboard();
+        }
+
         async function loadDashboard() {
             try {
-                const leaderboard = await getLeaderboard(DEFAULT_TOURNAMENT_ID);
+                const tournamentId = getSelectedTournamentId();
+                const category = getSelectedTournamentCategory();
+                updateCategoryUI(category);
+
+                const leaderboard = await getLeaderboard(tournamentId);
                 currentLeaderboard = leaderboard;
 
                 // Check if tournament has actually completed (not just an intermediate round)
                 const [tournament, allMatches] = await Promise.all([
-                    getTournament(DEFAULT_TOURNAMENT_ID).catch(() => null),
-                    getAllMatches(DEFAULT_TOURNAMENT_ID).catch(() => [])
+                    getTournament(tournamentId).catch(() => null),
+                    getAllMatches(tournamentId).catch(() => [])
                 ]);
 
                 const totalRounds = (tournament && tournament.total_rounds) ? tournament.total_rounds : 5;
@@ -194,8 +233,8 @@
 
         function renderLeaderboard(data) {
             const tbody = document.getElementById('leaderboardBody');
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><p>No players registered</p></div></td></tr>`;
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state" style="padding: 30px;"><p>No players registered for this tournament yet. Visit Admin to add players and create pairings.</p></div></td></tr>`;
                 return;
             }
             tbody.innerHTML = data.map((p, i) => `
@@ -212,7 +251,6 @@
                 </tr>
             `).join('');
         }
-
 
         function showToast(message, isError = false) {
             const container = document.getElementById('toastContainer');

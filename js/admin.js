@@ -7,9 +7,45 @@ let pairingCurrentRound = 1;
 let currentAdminTab = 'players';
 let adminLoggedIn = false;
 let adminUser = null;
+let currentTournamentId = getSelectedTournamentId();
 
 let allPlayersList = [];
 let pendingActionCallback = null;
+
+// ========================
+// Tournament Multi-Category Switcher
+// ========================
+
+function updateAdminTournamentUI() {
+    const cat = getSelectedTournamentCategory();
+    const isBoys = cat === 'boys';
+    const btnGirls = document.getElementById('adminBtnGirls');
+    const btnBoys = document.getElementById('adminBtnBoys');
+    const badge = document.getElementById('adminTournamentBadge');
+    const notice = document.getElementById('addPlayerTournamentNotice');
+
+    if (btnGirls) btnGirls.classList.toggle('active', !isBoys);
+    if (btnBoys) btnBoys.classList.toggle('active', isBoys);
+    const tournamentInfo = getTournamentInfo(currentTournamentId);
+    if (badge) {
+        badge.textContent = tournamentInfo.name;
+        badge.className = `badge ${isBoys ? 'badge-win' : 'badge-in-progress'}`;
+    }
+    if (notice) {
+        notice.innerHTML = `Adding player to: <strong>${tournamentInfo.name}</strong>`;
+    }
+}
+
+function switchAdminTournament(category) {
+    currentTournamentId = setSelectedTournamentCategory(category);
+    updateAdminTournamentUI();
+
+    // Reload active tab data
+    if (currentAdminTab === 'players') loadAdminPlayers();
+    else if (currentAdminTab === 'pairings') loadPairings(pairingCurrentRound);
+    else if (currentAdminTab === 'results') loadAdminRound(adminCurrentRound);
+    else if (currentAdminTab === 'history') loadResultHistory();
+}
 
 // ========================
 // Authentication
@@ -34,6 +70,9 @@ function handleLogin() {
             document.getElementById('adminPanel').classList.add('visible');
             errorEl.style.display = 'none';
             
+            // Initialize tournament UI
+            updateAdminTournamentUI();
+
             // Initialize all admin sections
             loadAdminPlayers();
             loadPairings(pairingCurrentRound);
@@ -116,7 +155,7 @@ async function loadAdminPlayers() {
     const tbody = document.getElementById('adminPlayersTableBody');
     try {
         await purgeInactiveParticipants();
-        const players = await getParticipants(DEFAULT_TOURNAMENT_ID);
+        const players = await getParticipants(currentTournamentId);
         allPlayersList = players || [];
         
         document.getElementById('playerCountBadge').textContent = `${allPlayersList.length} Players`;
@@ -187,6 +226,13 @@ function openAddPlayerModal() {
     document.getElementById('newRollNo').value = `P${String(nextNum).padStart(3, '0')}`;
     const branchSelect = document.getElementById('newPlayerBranch');
     if (branchSelect) branchSelect.value = '';
+
+    const tournamentInfo = getTournamentInfo(currentTournamentId);
+    const notice = document.getElementById('addPlayerTournamentNotice');
+    if (notice) {
+        notice.innerHTML = `Adding player to: <strong>${tournamentInfo.name}</strong>`;
+    }
+
     document.getElementById('addPlayerModal').classList.add('visible');
     document.getElementById('newPlayerName').focus();
 }
@@ -206,7 +252,7 @@ async function handleAddPlayerSubmit() {
     }
 
     try {
-        await addParticipant(DEFAULT_TOURNAMENT_ID, {
+        await addParticipant(currentTournamentId, {
             player_name: name,
             roll_no: rollNo,
             branch: branch
@@ -311,7 +357,7 @@ function populatePlayerDropdowns() {
 async function loadPairings(roundNumber) {
     const tbody = document.getElementById('roundPairingsTableBody');
     try {
-        const matches = await getMatchesByRound(DEFAULT_TOURNAMENT_ID, roundNumber);
+        const matches = await getMatchesByRound(currentTournamentId, roundNumber);
         
         document.getElementById('roundPairingCount').textContent = `${matches.length} Matches`;
         
@@ -388,7 +434,7 @@ async function handleCreatePairing() {
 
     try {
         await createMatch({
-            tournament_id: DEFAULT_TOURNAMENT_ID,
+            tournament_id: currentTournamentId,
             round_number: pairingCurrentRound,
             match_number: parseInt(boardNum),
             white_player_id: whiteId,
@@ -441,7 +487,7 @@ function promptDeletePairing(matchId, boardNum) {
 
 async function togglePublishCurrentRound(isPublished) {
     try {
-        await setRoundPublication(DEFAULT_TOURNAMENT_ID, pairingCurrentRound, isPublished);
+        await setRoundPublication(currentTournamentId, pairingCurrentRound, isPublished);
         showToast(`Round ${pairingCurrentRound} pairings are now ${isPublished ? 'PUBLIC' : 'UNPUBLISHED (Draft)'}!`);
         loadPairings(pairingCurrentRound);
     } catch (err) {
@@ -467,7 +513,7 @@ async function loadAdminRound(roundNumber) {
     container.innerHTML = `<div class="loading"><div class="spinner"></div><span>Loading matches...</span></div>`;
 
     try {
-        const matches = await getMatchesByRound(DEFAULT_TOURNAMENT_ID, roundNumber);
+        const matches = await getMatchesByRound(currentTournamentId, roundNumber);
 
         if (matches.length === 0) {
             container.innerHTML = `
@@ -614,7 +660,7 @@ function closeConfirmModal() {
 async function loadResultHistory() {
     const container = document.getElementById('resultHistoryContainer');
     try {
-        const history = await getResultHistory(DEFAULT_TOURNAMENT_ID);
+        const history = await getResultHistory(currentTournamentId);
 
         if (history.length === 0) {
             container.innerHTML = `

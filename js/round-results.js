@@ -5,6 +5,35 @@
 let currentRound = 1;
 let currentView = 'table';
 let roundMatches = [];
+let currentTournamentId = getSelectedTournamentId();
+
+// ========================
+// Tournament Category Switcher
+// ========================
+
+function updateRoundCategoryUI(cat) {
+    const isBoys = cat === 'boys';
+    const btnGirls = document.getElementById('btnRoundGirls');
+    const btnBoys = document.getElementById('btnRoundBoys');
+    const badge = document.getElementById('roundCategoryBadge');
+    const subtitle = document.getElementById('roundPageSubtitle');
+
+    if (btnGirls) btnGirls.classList.toggle('active', !isBoys);
+    if (btnBoys) btnBoys.classList.toggle('active', isBoys);
+    if (badge) {
+        badge.textContent = isBoys ? 'Boys Championship' : 'Girls Championship';
+        badge.className = `badge ${isBoys ? 'badge-win' : 'badge-in-progress'}`;
+    }
+    if (subtitle) {
+        subtitle.textContent = `Match results, standings, and lead tracking for ${isBoys ? 'Boys' : 'Girls'} Championship 2026`;
+    }
+}
+
+function switchRoundCategory(cat) {
+    currentTournamentId = setSelectedTournamentCategory(cat);
+    updateRoundCategoryUI(cat);
+    loadRoundData(currentRound);
+}
 
 // ========================
 // Round Selection
@@ -44,8 +73,8 @@ function setView(view) {
 async function loadRoundData(roundNumber) {
     try {
         const [matches, standings] = await Promise.all([
-            getMatchesByRound(DEFAULT_TOURNAMENT_ID, roundNumber),
-            getRoundStandings(DEFAULT_TOURNAMENT_ID, roundNumber)
+            getMatchesByRound(currentTournamentId, roundNumber),
+            getRoundStandings(currentTournamentId, roundNumber)
         ]);
 
         roundMatches = matches;
@@ -293,4 +322,5 @@ subscribeToMatches((payload) => {
 // Initialize
 // ========================
 
+updateRoundCategoryUI(getSelectedTournamentCategory());
 loadRoundData(1);

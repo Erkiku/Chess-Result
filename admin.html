@@ -356,6 +356,24 @@
             </div>
         </div>
 
+        <!-- Tournament Selection Bar -->
+        <div class="admin-tournament-bar card" style="padding: 14px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <span style="font-size: 0.9rem; font-weight: 700; color: var(--white-70);">Select Tournament:</span>
+                <div class="tournament-toggle-pill" id="adminTournamentToggle">
+                    <button type="button" class="tournament-toggle-btn active" id="adminBtnGirls" onclick="switchAdminTournament('girls')">
+                        👩 Girls Championship
+                    </button>
+                    <button type="button" class="tournament-toggle-btn" id="adminBtnBoys" onclick="switchAdminTournament('boys')">
+                        👨 Boys Championship
+                    </button>
+                </div>
+            </div>
+            <div id="adminTournamentBadge" class="badge badge-in-progress" style="font-size: 0.85rem; padding: 6px 14px;">
+                Grand Chess Championship 2026 - Girls
+            </div>
+        </div>
+
         <!-- Admin Subnav Tabs -->
         <div class="admin-subnav" id="adminSubnav">
             <button class="admin-subnav-btn active" data-tab="players" onclick="switchAdminTab('players')">
@@ -567,6 +585,9 @@
     <div class="modal-overlay" id="addPlayerModal">
         <div class="modal">
             <h3 class="modal-title">➕ Add New Player</h3>
+            <p id="addPlayerTournamentNotice" style="font-size: 0.85rem; color: var(--blue-400); margin-top: -6px; margin-bottom: 16px;">
+                Adding player to: <strong>Grand Chess Championship 2026 - Girls</strong>
+            </p>
             <div class="form-group">
                 <label class="form-label" for="newPlayerName">Player Full Name</label>
                 <input type="text" id="newPlayerName" class="form-input" placeholder="e.g. Ramesh Chandra">
@@ -643,8 +664,8 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="js/supabase.js"></script>
-    <script src="js/scoring.js"></script>
-    <script src="js/admin.js"></script>
+    <script src="js/supabase.js?v=2.4"></script>
+    <script src="js/scoring.js?v=2.4"></script>
+    <script src="js/admin.js?v=2.4"></script>
 </body>
 </html>
