@@ -113,35 +113,46 @@ function renderMatchTable(matches) {
         const isWhiteWinner = m.result === 'white_wins';
         const isBlackWinner = m.result === 'black_wins';
         const isDraw = m.result === 'draw';
-        const resultBadgeClass = m.result === 'pending' ? 'badge-pending' :
-                                 m.result === 'draw' ? 'badge-draw' : 'badge-win';
+
+        let resultBadgeHtml = '';
+        if (isWhiteWinner) {
+            resultBadgeHtml = `<span class="badge badge-win" style="font-weight:700;"><span class="player-color-dot white-piece" style="width:8px;height:8px;display:inline-block;margin-right:4px;"></span> White Wins</span>`;
+        } else if (isBlackWinner) {
+            resultBadgeHtml = `<span class="badge badge-win" style="font-weight:700;"><span class="player-color-dot black-piece" style="width:8px;height:8px;display:inline-block;margin-right:4px;"></span> Black Wins</span>`;
+        } else if (isDraw) {
+            resultBadgeHtml = `<span class="badge badge-draw">🤝 Draw</span>`;
+        } else {
+            resultBadgeHtml = `<span class="badge badge-pending">Pending</span>`;
+        }
 
         return `
             <tr>
                 <td><strong>#${m.match_number}</strong></td>
                 <td>
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <span class="player-color-dot white-piece" title="White Piece" style="width:11px;height:11px;"></span>
+                        <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid var(--white-15); font-size: 0.65rem; padding: 1px 5px; color: var(--white-70);">White</span>
                         <span style="${isWhiteWinner ? 'font-weight: 700; color: var(--white);' : ''}">${m.white_player?.player_name || '—'}</span>
                         <span style="color: var(--white-30); font-size: 0.75rem;">(${m.white_player?.roll_no || m.white_player?.player_id || ''})</span>
                         ${m.white_player?.branch ? `<span class="badge badge-branch">${m.white_player.branch}</span>` : ''}
-                        ${isWhiteWinner ? '<span class="badge badge-win" style="font-size: 0.65rem; padding: 1px 6px;">WINNER</span>' : ''}
+                        ${isWhiteWinner ? '<span class="badge badge-win" style="font-size: 0.65rem; padding: 1px 6px; font-weight:800;">🏆 WINNER</span>' : ''}
                     </div>
                     <div style="font-size: 0.85rem; font-weight: ${isWhiteWinner ? '800' : '600'}; color: ${isWhiteWinner ? 'var(--win-color)' : 'var(--white-50)'}; margin-top: 3px;">
-                        ${m.status === 'completed' ? m.white_points + ' pt' : '—'}
+                        ${m.status === 'completed' ? (isWhiteWinner ? `${m.white_points} pt (Won)` : `${m.white_points} pt`) : '—'}
                     </div>
                 </td>
-                <td><span class="badge ${resultBadgeClass}">${formatResult(m.result)}</span></td>
+                <td>${resultBadgeHtml}</td>
                 <td>
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <span class="player-color-dot black-piece" title="Black Piece" style="width:11px;height:11px;"></span>
+                        <span class="badge" style="background: rgba(0,0,0,0.25); border: 1px solid var(--white-15); font-size: 0.65rem; padding: 1px 5px; color: var(--white-70);">Black</span>
                         <span style="${isBlackWinner ? 'font-weight: 700; color: var(--white);' : ''}">${m.black_player?.player_name || '—'}</span>
                         <span style="color: var(--white-30); font-size: 0.75rem;">(${m.black_player?.roll_no || m.black_player?.player_id || ''})</span>
                         ${m.black_player?.branch ? `<span class="badge badge-branch">${m.black_player.branch}</span>` : ''}
-                        ${isBlackWinner ? '<span class="badge badge-win" style="font-size: 0.65rem; padding: 1px 6px;">WINNER</span>' : ''}
+                        ${isBlackWinner ? '<span class="badge badge-win" style="font-size: 0.65rem; padding: 1px 6px; font-weight:800;">🏆 WINNER</span>' : ''}
                     </div>
                     <div style="font-size: 0.85rem; font-weight: ${isBlackWinner ? '800' : '600'}; color: ${isBlackWinner ? 'var(--win-color)' : 'var(--white-50)'}; margin-top: 3px;">
-                        ${m.status === 'completed' ? m.black_points + ' pt' : '—'}
+                        ${m.status === 'completed' ? (isBlackWinner ? `${m.black_points} pt (Won)` : `${m.black_points} pt`) : '—'}
                     </div>
                 </td>
                 <td><strong style="${isWhiteWinner || isBlackWinner ? 'color: var(--win-color);' : ''}">${getWinner(m)}</strong></td>
@@ -170,23 +181,33 @@ function renderMatchCards(matches, roundNumber) {
 
         const cardClass = isPending ? 'pending' : isDraw ? 'draw' : 'win';
 
+        let resultBadgeHtml = '';
+        if (isWhiteWinner) {
+            resultBadgeHtml = `<span class="badge badge-win" style="font-weight:700;"><span class="player-color-dot white-piece" style="width:8px;height:8px;display:inline-block;margin-right:4px;"></span> White Wins</span>`;
+        } else if (isBlackWinner) {
+            resultBadgeHtml = `<span class="badge badge-win" style="font-weight:700;"><span class="player-color-dot black-piece" style="width:8px;height:8px;display:inline-block;margin-right:4px;"></span> Black Wins</span>`;
+        } else if (isDraw) {
+            resultBadgeHtml = `<span class="badge badge-draw">DRAW</span>`;
+        } else {
+            resultBadgeHtml = `<span class="badge badge-pending">Pending</span>`;
+        }
+
         return `
             <div class="match-card ${cardClass}">
                 <div class="match-card-header">
                     <span class="match-card-label">Match ${String(m.match_number).padStart(2, '0')} · Round ${roundNumber}</span>
-                    <span class="badge ${isPending ? 'badge-pending' : isDraw ? 'badge-draw' : 'badge-win'}">
-                        ${isPending ? 'Pending' : isDraw ? 'DRAW' : formatResult(m.result)}
-                    </span>
+                    ${resultBadgeHtml}
                 </div>
 
                 <div class="match-card-players">
                     <!-- White Player -->
                     <div class="match-player-row ${isWhiteWinner ? 'winner' : ''}">
                         <div class="player-info">
-                            <div class="player-color-dot white-piece"></div>
+                            <span class="player-color-dot white-piece" title="White Piece"></span>
+                            <span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid var(--white-15); font-size: 0.65rem; padding: 1px 5px;">White</span>
                             <div>
                                 <div class="player-name">${m.white_player?.player_name || '—'} ${m.white_player?.branch ? `<span class="badge badge-branch" style="font-size: 0.7rem; padding: 1px 6px;">${m.white_player.branch}</span>` : ''}</div>
-                                ${isWhiteWinner ? '<span class="badge badge-win" style="margin-top: 4px;">WINNER</span>' : ''}
+                                ${isWhiteWinner ? '<span class="badge badge-win" style="margin-top: 4px; font-weight:800;">🏆 WINNER</span>' : ''}
                             </div>
                         </div>
                         <span class="player-points ${isWhiteWinner ? 'highlight' : ''}">${m.status === 'completed' ? m.white_points : '—'}</span>
@@ -197,10 +218,11 @@ function renderMatchCards(matches, roundNumber) {
                     <!-- Black Player -->
                     <div class="match-player-row ${isBlackWinner ? 'winner' : ''}">
                         <div class="player-info">
-                            <div class="player-color-dot black-piece"></div>
+                            <span class="player-color-dot black-piece" title="Black Piece"></span>
+                            <span class="badge" style="background: rgba(0,0,0,0.25); border: 1px solid var(--white-15); font-size: 0.65rem; padding: 1px 5px;">Black</span>
                             <div>
                                 <div class="player-name">${m.black_player?.player_name || '—'} ${m.black_player?.branch ? `<span class="badge badge-branch" style="font-size: 0.7rem; padding: 1px 6px;">${m.black_player.branch}</span>` : ''}</div>
-                                ${isBlackWinner ? '<span class="badge badge-win" style="margin-top: 4px;">WINNER</span>' : ''}
+                                ${isBlackWinner ? '<span class="badge badge-win" style="margin-top: 4px; font-weight:800;">🏆 WINNER</span>' : ''}
                             </div>
                         </div>
                         <span class="player-points ${isBlackWinner ? 'highlight' : ''}">${m.status === 'completed' ? m.black_points : '—'}</span>
@@ -208,7 +230,7 @@ function renderMatchCards(matches, roundNumber) {
                 </div>
 
                 <div class="match-card-footer">
-                    <div class="match-result-text">Result: ${formatResult(m.result)}</div>
+                    <div class="match-result-text">Result: ${formatResult(m.result)} · Winner: <strong>${getWinner(m)}</strong></div>
                 </div>
             </div>
         `;
