@@ -2013,3 +2013,88 @@ tbody tr:last-child td {
     background: #ffffff !important;
     border-color: #e2e8f0 !important;
 }
+
+/* ========================
+   Site Footer & Copyright
+   ======================== */
+
+.site-footer {
+    margin-top: 48px;
+    padding: 24px 0 28px 0;
+    border-top: 1px solid var(--black-border);
+    text-align: center;
+}
+
+.footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copyright-claim {
+    font-size: 0.92rem;
+    color: var(--white-50);
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    line-height: 1.5;
+}
+
+.footer-author-link {
+    color: var(--blue-400);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    background: var(--blue-glow);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    transition: all var(--transition-fast);
+}
+
+.footer-author-link:hover {
+    color: var(--white);
+    background: var(--blue-600);
+    border-color: var(--blue-500);
+    box-shadow: 0 2px 14px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.footer-author-link:active {
+    transform: translateY(0);
+}
+
+.footer-author-link .github-icon {
+    width: 15px;
+    height: 15px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+[data-theme="light"] .site-footer {
+    border-top-color: #e2e8f0;
+}
+
+[data-theme="light"] .copyright-claim {
+    color: #475569;
+}
+
+[data-theme="light"] .footer-author-link {
+    color: #db2777;
+    background: #fdf2f8;
+    border-color: #fce7f3;
+}
+
+[data-theme="light"] .footer-author-link:hover {
+    color: #ffffff;
+    background: #ec4899;
+    border-color: #db2777;
+    box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3);
+}
+
