@@ -118,11 +118,25 @@
                 const leaderboard = await getLeaderboard(DEFAULT_TOURNAMENT_ID);
                 currentLeaderboard = leaderboard;
 
-                // Check if all tournament matches have happened (completed)
-                const allMatches = await getAllMatches(DEFAULT_TOURNAMENT_ID);
-                const allMatchesHappened = allMatches && allMatches.length > 0 && allMatches.every(m => m.status === 'completed' && m.result && m.result !== 'pending');
+                // Check if tournament has actually completed (not just an intermediate round)
+                const [tournament, allMatches] = await Promise.all([
+                    getTournament(DEFAULT_TOURNAMENT_ID).catch(() => null),
+                    getAllMatches(DEFAULT_TOURNAMENT_ID).catch(() => [])
+                ]);
 
-                if (allMatchesHappened) {
+                const totalRounds = (tournament && tournament.total_rounds) ? tournament.total_rounds : 5;
+                const roundsInDb = new Set((allMatches || []).map(m => m.round_number));
+                const hasAllRounds = totalRounds > 0 && Array.from({ length: totalRounds }, (_, i) => i + 1).every(r => roundsInDb.has(r));
+                const allMatchesCompleted = allMatches && allMatches.length > 0 && allMatches.every(m => m.status === 'completed' && m.result && m.result !== 'pending');
+
+                // The tournament champions podium is ONLY displayed when:
+                // 1) The tournament status is explicitly set to 'completed'
+                // OR
+                // 2) All tournament rounds (e.g. all 5 rounds) have been scheduled AND every match across all rounds is completed, AND tournament is not 'in_progress'
+                const isTournamentFinished = (tournament && tournament.status === 'completed') || 
+                    (hasAllRounds && allMatchesCompleted && tournament?.status !== 'in_progress');
+
+                if (isTournamentFinished && leaderboard && leaderboard.length >= 2) {
                     renderChampions(leaderboard.slice(0, 2));
                 } else {
                     const container = document.getElementById('championsContainer');
@@ -153,11 +167,12 @@
             container.style.display = 'grid';
             const winner = top2[0];
             const runnerUp = top2[1];
+            const isTie = winner.total_points === runnerUp.total_points;
 
             container.innerHTML = `
                 <!-- Winner Card -->
                 <div class="podium-card winner">
-                    <div class="podium-badge">🏆 Winner</div>
+                    <div class="podium-badge">${isTie ? '🤝 Joint Leader' : '🏆 Winner'}</div>
                     <div class="podium-rank">#1</div>
                     <div class="podium-name">${winner.player_name}</div>
                     <div class="podium-roll">Roll-No: ${winner.roll_no || winner.player_code}${winner.branch ? ' · Branch: ' + winner.branch : ''}</div>
@@ -167,8 +182,8 @@
 
                 <!-- Runner Up Card -->
                 <div class="podium-card runner-up">
-                    <div class="podium-badge">🥈 Runner Up</div>
-                    <div class="podium-rank">#2</div>
+                    <div class="podium-badge">${isTie ? '🤝 Joint Leader' : '🥈 Runner Up'}</div>
+                    <div class="podium-rank">${isTie ? '#1' : '#2'}</div>
                     <div class="podium-name">${runnerUp.player_name}</div>
                     <div class="podium-roll">Roll-No: ${runnerUp.roll_no || runnerUp.player_code}${runnerUp.branch ? ' · Branch: ' + runnerUp.branch : ''}</div>
                     <div class="podium-points">${runnerUp.total_points} pts</div>
