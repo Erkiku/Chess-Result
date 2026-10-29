@@ -226,6 +226,40 @@
             align-items: end;
         }
 
+        select optgroup {
+            background-color: var(--black-card);
+            color: var(--blue-400);
+            font-weight: 700;
+        }
+
+        select option:disabled {
+            color: var(--white-40);
+            background-color: var(--black-soft);
+        }
+
+        .pairing-helper-bar {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--white-10);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .pairing-conflict-alert {
+            display: none;
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
         @media (max-width: 860px) {
             .pairing-form-grid {
                 grid-template-columns: 1fr;
@@ -481,7 +515,7 @@
                     </div>
                     <div>
                         <label class="form-label" for="pairingWhitePlayer">White Player (Piece ♔)</label>
-                        <select id="pairingWhitePlayer" class="form-input">
+                        <select id="pairingWhitePlayer" class="form-input" onchange="checkPairingSelectionConflict()">
                             <option value="">Select White Player</option>
                         </select>
                     </div>
@@ -490,15 +524,21 @@
                     </div>
                     <div>
                         <label class="form-label" for="pairingBlackPlayer">Black Player (Piece ♚)</label>
-                        <select id="pairingBlackPlayer" class="form-input">
+                        <select id="pairingBlackPlayer" class="form-input" onchange="checkPairingSelectionConflict()">
                             <option value="">Select Black Player</option>
                         </select>
                     </div>
                     <div>
-                        <button class="btn btn-primary" style="height: 44px; white-space: nowrap;" onclick="handleCreatePairing()">
+                        <button id="btnAddPairing" class="btn btn-primary" style="height: 44px; white-space: nowrap;" onclick="handleCreatePairing()">
                             Add Pairing
                         </button>
                     </div>
+                </div>
+                <div class="pairing-helper-bar">
+                    <div id="pairingAvailabilityInfo" style="color: var(--white-60);">
+                        <span>Available players for this round: <strong id="availPlayersCount" style="color: var(--blue-400);">0</strong></span>
+                    </div>
+                    <div id="pairingConflictNotice" class="pairing-conflict-alert"></div>
                 </div>
             </div>
 

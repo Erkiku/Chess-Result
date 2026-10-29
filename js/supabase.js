@@ -168,12 +168,74 @@ async function getAllMatches(tournamentId) {
 }
 
 async function createMatch({ tournament_id, round_number, match_number, white_player_id, black_player_id, is_published = true }) {
+    const roundNum = parseInt(round_number);
+    const matchNum = parseInt(match_number);
+
+    if (!white_player_id || !black_player_id) {
+        throw new Error('Please select both White and Black players');
+    }
+    if (white_player_id === black_player_id) {
+        throw new Error('A player cannot play against themselves! Choose different players.');
+    }
+
+    // 1. Check if either player is already paired in this round (as White or Black)
+    const { data: existingInRound, error: checkRoundErr } = await db
+        .from('matches')
+        .select(`
+            id, match_number, white_player_id, black_player_id,
+            white_player:participants!matches_white_player_id_fkey(player_name),
+            black_player:participants!matches_black_player_id_fkey(player_name)
+        `)
+        .eq('tournament_id', tournament_id)
+        .eq('round_number', roundNum);
+
+    if (!checkRoundErr && existingInRound) {
+        const whiteConflict = existingInRound.find(m => m.white_player_id === white_player_id || m.black_player_id === white_player_id);
+        if (whiteConflict) {
+            const pName = whiteConflict.white_player_id === white_player_id ? whiteConflict.white_player?.player_name : whiteConflict.black_player?.player_name;
+            throw new Error(`${pName || 'White player'} is already paired in Round ${roundNum} on Board #${whiteConflict.match_number}`);
+        }
+
+        const blackConflict = existingInRound.find(m => m.white_player_id === black_player_id || m.black_player_id === black_player_id);
+        if (blackConflict) {
+            const pName = blackConflict.white_player_id === black_player_id ? blackConflict.white_player?.player_name : blackConflict.black_player?.player_name;
+            throw new Error(`${pName || 'Black player'} is already paired in Round ${roundNum} on Board #${blackConflict.match_number}`);
+        }
+
+        const boardConflict = existingInRound.find(m => m.match_number === matchNum);
+        if (boardConflict) {
+            throw new Error(`Board #${matchNum} already exists in Round ${roundNum}`);
+        }
+    }
+
+    // 2. Check tournament-wide head-to-head: Players cannot play each other twice
+    const { data: allMatches, error: allMatchesErr } = await db
+        .from('matches')
+        .select(`
+            id, round_number, match_number, white_player_id, black_player_id,
+            white_player:participants!matches_white_player_id_fkey(player_name),
+            black_player:participants!matches_black_player_id_fkey(player_name)
+        `)
+        .eq('tournament_id', tournament_id);
+
+    if (!allMatchesErr && allMatches) {
+        const prevH2H = allMatches.find(m => 
+            (m.white_player_id === white_player_id && m.black_player_id === black_player_id) ||
+            (m.white_player_id === black_player_id && m.black_player_id === white_player_id)
+        );
+        if (prevH2H) {
+            const wName = prevH2H.white_player?.player_name || 'Player 1';
+            const bName = prevH2H.black_player?.player_name || 'Player 2';
+            throw new Error(`${wName} and ${bName} have already played each other in Round ${prevH2H.round_number} (Board #${prevH2H.match_number})`);
+        }
+    }
+
     const { data, error } = await db
         .from('matches')
         .insert([{
             tournament_id,
-            round_number: parseInt(round_number),
-            match_number: parseInt(match_number),
+            round_number: roundNum,
+            match_number: matchNum,
             white_player_id,
             black_player_id,
             result: 'pending',
@@ -188,7 +250,22 @@ async function createMatch({ tournament_id, round_number, match_number, white_pl
             black_player:participants!matches_black_player_id_fkey(id, player_name, roll_no)
         `)
         .single();
-    if (error) throw error;
+
+    if (error) {
+        if (error.code === '23505') {
+            if (error.message && error.message.includes('idx_unique_white_per_round')) {
+                throw new Error(`The selected White player is already paired as White in Round ${roundNum}`);
+            }
+            if (error.message && error.message.includes('idx_unique_black_per_round')) {
+                throw new Error(`The selected Black player is already paired as Black in Round ${roundNum}`);
+            }
+            if (error.message && error.message.includes('match_number')) {
+                throw new Error(`Board #${matchNum} already exists in Round ${roundNum}`);
+            }
+            throw new Error('A player or board pairing conflict occurred in this round');
+        }
+        throw error;
+    }
     return data;
 }
 
@@ -197,6 +274,52 @@ async function updateMatchPairing(matchId, { white_player_id, black_player_id, m
     if (white_player_id) updates.white_player_id = white_player_id;
     if (black_player_id) updates.black_player_id = black_player_id;
     if (match_number !== undefined) updates.match_number = parseInt(match_number);
+
+    // If updating players or board, ensure no conflict with other matches in the same round
+    if (white_player_id || black_player_id || match_number !== undefined) {
+        const { data: curMatch } = await db.from('matches')
+            .select('tournament_id, round_number, white_player_id, black_player_id, match_number')
+            .eq('id', matchId)
+            .single();
+
+        if (curMatch) {
+            const targetWhite = white_player_id || curMatch.white_player_id;
+            const targetBlack = black_player_id || curMatch.black_player_id;
+            const targetBoard = match_number !== undefined ? parseInt(match_number) : curMatch.match_number;
+            const targetRound = curMatch.round_number;
+
+            if (targetWhite === targetBlack) {
+                throw new Error('A player cannot play against themselves');
+            }
+
+            const { data: otherMatches } = await db.from('matches')
+                .select(`
+                    id, match_number, white_player_id, black_player_id,
+                    white_player:participants!matches_white_player_id_fkey(player_name),
+                    black_player:participants!matches_black_player_id_fkey(player_name)
+                `)
+                .eq('tournament_id', curMatch.tournament_id)
+                .eq('round_number', targetRound)
+                .neq('id', matchId);
+
+            if (otherMatches && otherMatches.length > 0) {
+                const whiteConflict = otherMatches.find(m => m.white_player_id === targetWhite || m.black_player_id === targetWhite);
+                if (whiteConflict) {
+                    const pName = whiteConflict.white_player_id === targetWhite ? whiteConflict.white_player?.player_name : whiteConflict.black_player?.player_name;
+                    throw new Error(`${pName || 'White player'} is already paired in Round ${targetRound} on Board #${whiteConflict.match_number}`);
+                }
+                const blackConflict = otherMatches.find(m => m.white_player_id === targetBlack || m.black_player_id === targetBlack);
+                if (blackConflict) {
+                    const pName = blackConflict.white_player_id === targetBlack ? blackConflict.white_player?.player_name : blackConflict.black_player?.player_name;
+                    throw new Error(`${pName || 'Black player'} is already paired in Round ${targetRound} on Board #${blackConflict.match_number}`);
+                }
+                const boardConflict = otherMatches.find(m => m.match_number === targetBoard);
+                if (boardConflict) {
+                    throw new Error(`Board #${targetBoard} already exists in Round ${targetRound}`);
+                }
+            }
+        }
+    }
 
     const { data, error } = await db
         .from('matches')
@@ -208,7 +331,12 @@ async function updateMatchPairing(matchId, { white_player_id, black_player_id, m
             black_player:participants!matches_black_player_id_fkey(id, player_name, roll_no)
         `)
         .single();
-    if (error) throw error;
+    if (error) {
+        if (error.code === '23505') {
+            throw new Error('A player or board conflict occurred with an existing match in this round');
+        }
+        throw error;
+    }
     return data;
 }
 

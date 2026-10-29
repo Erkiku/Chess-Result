@@ -10,6 +10,8 @@ let adminUser = null;
 let currentTournamentId = getSelectedTournamentId();
 
 let allPlayersList = [];
+let currentRoundMatches = [];
+let allTournamentMatchesCache = [];
 let pendingActionCallback = null;
 
 // ========================
@@ -39,6 +41,8 @@ function updateAdminTournamentUI() {
 function switchAdminTournament(category) {
     currentTournamentId = setSelectedTournamentCategory(category);
     updateAdminTournamentUI();
+    currentRoundMatches = [];
+    allTournamentMatchesCache = [];
 
     // Reload active tab data
     if (currentAdminTab === 'players') loadAdminPlayers();
@@ -342,35 +346,180 @@ function selectPairingRound(roundNumber) {
     loadPairings(roundNumber);
 }
 
-function populatePlayerDropdowns() {
+async function refreshTournamentMatchesCache() {
+    try {
+        allTournamentMatchesCache = await getAllMatches(currentTournamentId) || [];
+    } catch (e) {
+        console.warn('Failed to cache tournament matches:', e);
+        allTournamentMatchesCache = [];
+    }
+}
+
+function populatePlayerDropdowns(roundMatches = currentRoundMatches) {
     const whiteSelect = document.getElementById('pairingWhitePlayer');
     const blackSelect = document.getElementById('pairingBlackPlayer');
+    if (!whiteSelect || !blackSelect) return;
 
-    const options = allPlayersList.map(p => 
-        `<option value="${p.id}">${p.player_name} (${p.roll_no || p.player_id}${p.branch ? ' · ' + p.branch : ''})</option>`
-    ).join('');
+    // Track players already paired in this specific round
+    const pairedInRoundMap = new Map();
+    (roundMatches || []).forEach(m => {
+        if (m.white_player_id) {
+            pairedInRoundMap.set(m.white_player_id, {
+                match_number: m.match_number,
+                color: 'White',
+                opponent: m.black_player?.player_name || 'Black'
+            });
+        }
+        if (m.black_player_id) {
+            pairedInRoundMap.set(m.black_player_id, {
+                match_number: m.match_number,
+                color: 'Black',
+                opponent: m.white_player?.player_name || 'White'
+            });
+        }
+    });
 
-    whiteSelect.innerHTML = `<option value="">Select White Player</option>` + options;
-    blackSelect.innerHTML = `<option value="">Select Black Player</option>` + options;
+    const availablePlayers = allPlayersList.filter(p => !pairedInRoundMap.has(p.id));
+    const alreadyPairedPlayers = allPlayersList.filter(p => pairedInRoundMap.has(p.id));
+
+    // Update availability counter in UI
+    const availCountEl = document.getElementById('availPlayersCount');
+    if (availCountEl) {
+        availCountEl.textContent = `${availablePlayers.length} / ${allPlayersList.length}`;
+    }
+
+    const currentWhiteVal = whiteSelect.value;
+    const currentBlackVal = blackSelect.value;
+
+    function buildOptionsHtml(selectedId) {
+        let html = '';
+        if (availablePlayers.length > 0) {
+            html += `<optgroup label="Available Players (${availablePlayers.length})">`;
+            availablePlayers.forEach(p => {
+                const isSelected = p.id === selectedId ? 'selected' : '';
+                html += `<option value="${p.id}" ${isSelected}>${p.player_name} (${p.roll_no || p.player_id}${p.branch ? ' · ' + p.branch : ''})</option>`;
+            });
+            html += `</optgroup>`;
+        } else {
+            html += `<optgroup label="Available Players (0)"><option value="" disabled>All registered players are paired in this round</option></optgroup>`;
+        }
+
+        if (alreadyPairedPlayers.length > 0) {
+            html += `<optgroup label="Already Paired in Round ${pairingCurrentRound} (${alreadyPairedPlayers.length})">`;
+            alreadyPairedPlayers.forEach(p => {
+                const info = pairedInRoundMap.get(p.id);
+                html += `<option value="${p.id}" disabled style="color: var(--white-40);">🔒 ${p.player_name} (${p.roll_no || p.player_id}) — Board #${info.match_number} (${info.color})</option>`;
+            });
+            html += `</optgroup>`;
+        }
+        return html;
+    }
+
+    whiteSelect.innerHTML = `<option value="">Select White Player</option>` + buildOptionsHtml(currentWhiteVal);
+    blackSelect.innerHTML = `<option value="">Select Black Player</option>` + buildOptionsHtml(currentBlackVal);
+
+    // If an already paired player was previously selected, clear selection
+    if (currentWhiteVal && pairedInRoundMap.has(currentWhiteVal)) whiteSelect.value = '';
+    if (currentBlackVal && pairedInRoundMap.has(currentBlackVal)) blackSelect.value = '';
+
+    checkPairingSelectionConflict();
+}
+
+function checkPairingSelectionConflict() {
+    const whiteSelect = document.getElementById('pairingWhitePlayer');
+    const blackSelect = document.getElementById('pairingBlackPlayer');
+    const noticeEl = document.getElementById('pairingConflictNotice');
+    const btnAdd = document.getElementById('btnAddPairing');
+    if (!whiteSelect || !blackSelect) return;
+
+    const whiteId = whiteSelect.value;
+    const blackId = blackSelect.value;
+
+    if (!noticeEl) return;
+
+    // Reset notice
+    noticeEl.style.display = 'none';
+    noticeEl.textContent = '';
+    if (btnAdd) btnAdd.disabled = false;
+
+    if (!whiteId && !blackId) return;
+
+    const whitePlayer = allPlayersList.find(p => p.id === whiteId);
+    const blackPlayer = allPlayersList.find(p => p.id === blackId);
+
+    // 1. Same player selected as White and Black
+    if (whiteId && blackId && whiteId === blackId) {
+        noticeEl.innerHTML = `⚠️ <strong>Invalid Pairing:</strong> A player cannot play against themselves!`;
+        noticeEl.style.display = 'block';
+        if (btnAdd) btnAdd.disabled = true;
+        return;
+    }
+
+    // 2. White player already paired in this round
+    if (whiteId) {
+        const whiteInMatch = currentRoundMatches.find(m => m.white_player_id === whiteId || m.black_player_id === whiteId);
+        if (whiteInMatch) {
+            noticeEl.innerHTML = `⚠️ <strong>Round Conflict:</strong> ${whitePlayer?.player_name || 'White player'} is already paired in Round ${pairingCurrentRound} on Board #${whiteInMatch.match_number}!`;
+            noticeEl.style.display = 'block';
+            if (btnAdd) btnAdd.disabled = true;
+            return;
+        }
+    }
+
+    // 3. Black player already paired in this round
+    if (blackId) {
+        const blackInMatch = currentRoundMatches.find(m => m.white_player_id === blackId || m.black_player_id === blackId);
+        if (blackInMatch) {
+            noticeEl.innerHTML = `⚠️ <strong>Round Conflict:</strong> ${blackPlayer?.player_name || 'Black player'} is already paired in Round ${pairingCurrentRound} on Board #${blackInMatch.match_number}!`;
+            noticeEl.style.display = 'block';
+            if (btnAdd) btnAdd.disabled = true;
+            return;
+        }
+    }
+
+    // 4. Have these two players already played each other in this tournament?
+    if (whiteId && blackId && allTournamentMatchesCache.length > 0) {
+        const previousH2H = allTournamentMatchesCache.find(m => 
+            (m.white_player_id === whiteId && m.black_player_id === blackId) ||
+            (m.white_player_id === blackId && m.black_player_id === whiteId)
+        );
+        if (previousH2H) {
+            noticeEl.innerHTML = `⚠️ <strong>Tournament Rule:</strong> ${whitePlayer?.player_name || 'White'} and ${blackPlayer?.player_name || 'Black'} have already played each other in Round ${previousH2H.round_number} (Board #${previousH2H.match_number})!`;
+            noticeEl.style.display = 'block';
+            if (btnAdd) btnAdd.disabled = true;
+            return;
+        }
+    }
 }
 
 async function loadPairings(roundNumber) {
     const tbody = document.getElementById('roundPairingsTableBody');
     try {
         const matches = await getMatchesByRound(currentTournamentId, roundNumber);
+        currentRoundMatches = matches || [];
+
+        // Refresh tournament-wide matches cache
+        await refreshTournamentMatchesCache();
         
-        document.getElementById('roundPairingCount').textContent = `${matches.length} Matches`;
+        document.getElementById('roundPairingCount').textContent = `${currentRoundMatches.length} Matches`;
         
-        // Suggest next board number
-        const nextBoard = matches.length > 0 ? Math.max(...matches.map(m => m.match_number)) + 1 : 1;
+        // Suggest next unused board number
+        const existingBoards = currentRoundMatches.map(m => m.match_number);
+        let nextBoard = 1;
+        while (existingBoards.includes(nextBoard)) {
+            nextBoard++;
+        }
         document.getElementById('pairingBoardNum').value = nextBoard;
 
-        if (matches.length === 0) {
+        // Populate dropdowns with updated available vs already paired statuses
+        populatePlayerDropdowns(currentRoundMatches);
+
+        if (currentRoundMatches.length === 0) {
             tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><p>No pairings created for Round ${roundNumber} yet</p></td></tr>`;
             return;
         }
 
-        tbody.innerHTML = matches.map(m => `
+        tbody.innerHTML = currentRoundMatches.map(m => `
             <tr>
                 <td><strong style="color: var(--blue-400);">Board #${m.match_number}</strong></td>
                 <td>
@@ -418,12 +567,20 @@ async function loadPairings(roundNumber) {
 }
 
 async function handleCreatePairing() {
-    const boardNum = document.getElementById('pairingBoardNum').value;
-    const whiteId = document.getElementById('pairingWhitePlayer').value;
-    const blackId = document.getElementById('pairingBlackPlayer').value;
+    const boardInput = document.getElementById('pairingBoardNum');
+    const boardNum = parseInt(boardInput.value);
+    const whiteSelect = document.getElementById('pairingWhitePlayer');
+    const blackSelect = document.getElementById('pairingBlackPlayer');
+    const whiteId = whiteSelect.value;
+    const blackId = blackSelect.value;
 
-    if (!boardNum || !whiteId || !blackId) {
-        showToast('Please select Board # and both White and Black players', true);
+    if (!boardNum || boardNum <= 0) {
+        showToast('Please enter a valid Board # (1 or higher)', true);
+        return;
+    }
+
+    if (!whiteId || !blackId) {
+        showToast('Please select both White and Black players', true);
         return;
     }
 
@@ -432,21 +589,68 @@ async function handleCreatePairing() {
         return;
     }
 
+    const whitePlayer = allPlayersList.find(p => p.id === whiteId);
+    const blackPlayer = allPlayersList.find(p => p.id === blackId);
+    const whiteName = whitePlayer ? whitePlayer.player_name : 'White player';
+    const blackName = blackPlayer ? blackPlayer.player_name : 'Black player';
+
     try {
+        // Fetch fresh matches in this round to prevent race condition or duplicate pairings
+        const freshRoundMatches = await getMatchesByRound(currentTournamentId, pairingCurrentRound);
+        currentRoundMatches = freshRoundMatches || [];
+
+        // 1. Check if board number is already used in this round
+        const boardConflict = currentRoundMatches.find(m => m.match_number === boardNum);
+        if (boardConflict) {
+            showToast(`Board #${boardNum} already exists in Round ${pairingCurrentRound}. Please choose a different board number.`, true);
+            return;
+        }
+
+        // 2. Check if White player is already paired in this round (as White OR Black)
+        const whiteConflict = currentRoundMatches.find(m => m.white_player_id === whiteId || m.black_player_id === whiteId);
+        if (whiteConflict) {
+            showToast(`Cannot create pairing: ${whiteName} is already paired in Round ${pairingCurrentRound} (Board #${whiteConflict.match_number})! A player cannot be paired multiple times in the same round.`, true);
+            populatePlayerDropdowns(currentRoundMatches);
+            return;
+        }
+
+        // 3. Check if Black player is already paired in this round (as White OR Black)
+        const blackConflict = currentRoundMatches.find(m => m.white_player_id === blackId || m.black_player_id === blackId);
+        if (blackConflict) {
+            showToast(`Cannot create pairing: ${blackName} is already paired in Round ${pairingCurrentRound} (Board #${blackConflict.match_number})! A player cannot be paired multiple times in the same round.`, true);
+            populatePlayerDropdowns(currentRoundMatches);
+            return;
+        }
+
+        // 4. Check if these two players have already faced each other in this tournament
+        const freshAllMatches = await getAllMatches(currentTournamentId);
+        allTournamentMatchesCache = freshAllMatches || [];
+        const previousH2H = allTournamentMatchesCache.find(m => 
+            (m.white_player_id === whiteId && m.black_player_id === blackId) ||
+            (m.white_player_id === blackId && m.black_player_id === whiteId)
+        );
+        if (previousH2H) {
+            showToast(`Cannot create pairing: ${whiteName} and ${blackName} have already played each other in Round ${previousH2H.round_number} (Board #${previousH2H.match_number})! In tournament rules, players cannot play each other twice.`, true);
+            return;
+        }
+
+        // 5. Create match in DB
         await createMatch({
             tournament_id: currentTournamentId,
             round_number: pairingCurrentRound,
-            match_number: parseInt(boardNum),
+            match_number: boardNum,
             white_player_id: whiteId,
             black_player_id: blackId,
             is_published: true
         });
 
-        showToast(`Board #${boardNum} pairing created!`);
+        showToast(`Board #${boardNum} pairing created: ${whiteName} vs ${blackName}!`);
+        
         // Reset selections
-        document.getElementById('pairingWhitePlayer').value = '';
-        document.getElementById('pairingBlackPlayer').value = '';
-        loadPairings(pairingCurrentRound);
+        whiteSelect.value = '';
+        blackSelect.value = '';
+        
+        await loadPairings(pairingCurrentRound);
     } catch (err) {
         console.error('Error creating pairing:', err);
         showToast('Failed to create pairing: ' + (err.message || ''), true);
