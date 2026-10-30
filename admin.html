@@ -558,15 +558,16 @@
                                 <th>Black Player</th>
                                 <th>Status</th>
                                 <th>Published</th>
+                                <th>Change Pair</th>
                                 <th style="text-align: right;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="roundPairingsTableBody">
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="loading">
-                                        <div class="spinner"></div>
-                                        <span>Loading pairings...</span>
+                                         <div class="spinner"></div>
+                                         <span>Loading pairings...</span>
                                     </div>
                                 </td>
                             </tr>
@@ -683,6 +684,58 @@
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeEditPlayerModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="handleEditPlayerSubmit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Match Pairing Modal -->
+    <div class="modal-overlay" id="editPairingModal">
+        <div class="modal" style="max-width: 520px;">
+            <h3 class="modal-title">✏️ Change Paired Players (Board #<span id="editPairingBoardNumDisplay">1</span>)</h3>
+            <p style="font-size: 0.85rem; color: var(--white-50); margin-top: -6px; margin-bottom: 20px;">
+                Change the paired players or edit player names according to your requirements.
+            </p>
+            <input type="hidden" id="editPairingMatchId">
+
+            <!-- White Player Section -->
+            <div style="background: var(--white-05); border: 1px solid var(--white-10); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span class="player-color-dot white-piece" style="width: 12px; height: 12px;"></span>
+                    <strong style="color: var(--white);">White Player (Piece ♔)</strong>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label" for="editPairingWhiteSelect" style="font-size: 0.8rem;">Select Player</label>
+                    <select id="editPairingWhiteSelect" class="form-input" onchange="onEditPairingWhiteChange()">
+                        <option value="">Select White Player</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="editPairingWhiteCustomName" style="font-size: 0.8rem;">Edit / Rename Player Name</label>
+                    <input type="text" id="editPairingWhiteCustomName" class="form-input" placeholder="Enter player name...">
+                </div>
+            </div>
+
+            <!-- Black Player Section -->
+            <div style="background: var(--white-05); border: 1px solid var(--white-10); border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span class="player-color-dot black-piece" style="width: 12px; height: 12px;"></span>
+                    <strong style="color: var(--white);">Black Player (Piece ♚)</strong>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label" for="editPairingBlackSelect" style="font-size: 0.8rem;">Select Player</label>
+                    <select id="editPairingBlackSelect" class="form-input" onchange="onEditPairingBlackChange()">
+                        <option value="">Select Black Player</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="editPairingBlackCustomName" style="font-size: 0.8rem;">Edit / Rename Player Name</label>
+                    <input type="text" id="editPairingBlackCustomName" class="form-input" placeholder="Enter player name...">
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeEditPairingModal()">Cancel</button>
+                <button class="btn btn-primary" id="btnSavePairingChanges" onclick="handleEditPairingSubmit()">Save Changes</button>
             </div>
         </div>
     </div>

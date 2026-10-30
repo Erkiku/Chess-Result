@@ -73,7 +73,7 @@ function handleLogin() {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('adminPanel').classList.add('visible');
             errorEl.style.display = 'none';
-            
+
             // Initialize tournament UI
             updateAdminTournamentUI();
 
@@ -161,7 +161,7 @@ async function loadAdminPlayers() {
         await purgeInactiveParticipants();
         const players = await getParticipants(currentTournamentId);
         allPlayersList = players || [];
-        
+
         document.getElementById('playerCountBadge').textContent = `${allPlayersList.length} Players`;
         renderPlayersTable(allPlayersList);
         populatePlayerDropdowns();
@@ -214,8 +214,8 @@ function filterAdminPlayers() {
         renderPlayersTable(allPlayersList);
         return;
     }
-    const filtered = allPlayersList.filter(p => 
-        p.player_name.toLowerCase().includes(q) || 
+    const filtered = allPlayersList.filter(p =>
+        p.player_name.toLowerCase().includes(q) ||
         (p.roll_no && p.roll_no.toLowerCase().includes(q)) ||
         (p.branch && p.branch.toLowerCase().includes(q)) ||
         (p.player_id && p.player_id.toLowerCase().includes(q))
@@ -316,7 +316,7 @@ async function handleEditPlayerSubmit() {
 function promptDeletePlayer(id, name) {
     document.getElementById('confirmTitle').textContent = '🗑️ Delete Player';
     document.getElementById('confirmMessage').innerHTML = `Are you sure you want to completely remove <strong>${name}</strong>? All their matches and records will be permanently deleted from the database.`;
-    
+
     pendingActionCallback = async () => {
         try {
             await deleteParticipant(id);
@@ -479,7 +479,7 @@ function checkPairingSelectionConflict() {
 
     // 4. Have these two players already played each other in this tournament?
     if (whiteId && blackId && allTournamentMatchesCache.length > 0) {
-        const previousH2H = allTournamentMatchesCache.find(m => 
+        const previousH2H = allTournamentMatchesCache.find(m =>
             (m.white_player_id === whiteId && m.black_player_id === blackId) ||
             (m.white_player_id === blackId && m.black_player_id === whiteId)
         );
@@ -500,9 +500,9 @@ async function loadPairings(roundNumber) {
 
         // Refresh tournament-wide matches cache
         await refreshTournamentMatchesCache();
-        
+
         document.getElementById('roundPairingCount').textContent = `${currentRoundMatches.length} Matches`;
-        
+
         // Suggest next unused board number
         const existingBoards = currentRoundMatches.map(m => m.match_number);
         let nextBoard = 1;
@@ -515,7 +515,7 @@ async function loadPairings(roundNumber) {
         populatePlayerDropdowns(currentRoundMatches);
 
         if (currentRoundMatches.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><p>No pairings created for Round ${roundNumber} yet</p></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><p>No pairings created for Round ${roundNumber} yet</p></td></tr>`;
             return;
         }
 
@@ -537,6 +537,15 @@ async function loadPairings(roundNumber) {
                 </td>
                 <td><span class="badge ${m.status === 'completed' ? 'badge-completed' : 'badge-pending'}">${m.status}</span></td>
                 <td><span class="badge ${m.is_published ? 'badge-win' : 'badge-upcoming'}">${m.is_published ? 'Published' : 'Draft'}</span></td>
+                <td>
+                    <button class="action-btn action-btn-edit" title="Change paired players or names" onclick="openEditPairingModal('${m.id}')" style="color: var(--blue-400); border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.08); padding: 5px 11px; gap: 6px; font-size: 0.8rem;">
+                        <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        <span>Change Pair</span>
+                    </button>
+                </td>
                 <td style="text-align: right;">
                     <div class="table-actions">
                         <button class="action-btn action-btn-edit" title="Swap White/Black Pieces" onclick="handleSwapPairingColors('${m.id}', '${m.white_player_id}', '${m.black_player_id}')">
@@ -562,7 +571,7 @@ async function loadPairings(roundNumber) {
 
     } catch (err) {
         console.error('Error loading pairings:', err);
-        tbody.innerHTML = `<tr><td colspan="7" class="error-state">Failed to load pairings</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="error-state">Failed to load pairings</td></tr>`;
     }
 }
 
@@ -625,7 +634,7 @@ async function handleCreatePairing() {
         // 4. Check if these two players have already faced each other in this tournament
         const freshAllMatches = await getAllMatches(currentTournamentId);
         allTournamentMatchesCache = freshAllMatches || [];
-        const previousH2H = allTournamentMatchesCache.find(m => 
+        const previousH2H = allTournamentMatchesCache.find(m =>
             (m.white_player_id === whiteId && m.black_player_id === blackId) ||
             (m.white_player_id === blackId && m.black_player_id === whiteId)
         );
@@ -645,11 +654,11 @@ async function handleCreatePairing() {
         });
 
         showToast(`Board #${boardNum} pairing created: ${whiteName} vs ${blackName}!`);
-        
+
         // Reset selections
         whiteSelect.value = '';
         blackSelect.value = '';
-        
+
         await loadPairings(pairingCurrentRound);
     } catch (err) {
         console.error('Error creating pairing:', err);
@@ -701,6 +710,136 @@ async function togglePublishCurrentRound(isPublished) {
 }
 
 // ==============================================
+// EDIT / CHANGE PAIRING MODAL LOGIC
+// ==============================================
+
+function openEditPairingModal(matchId) {
+    const match = currentRoundMatches.find(m => m.id === matchId);
+    if (!match) return;
+
+    document.getElementById('editPairingMatchId').value = matchId;
+    document.getElementById('editPairingBoardNumDisplay').textContent = match.match_number;
+
+    const whiteSelect = document.getElementById('editPairingWhiteSelect');
+    const blackSelect = document.getElementById('editPairingBlackSelect');
+    const whiteNameInput = document.getElementById('editPairingWhiteCustomName');
+    const blackNameInput = document.getElementById('editPairingBlackCustomName');
+
+    // In this round, players in other matches are busy; current match's players are available
+    const busyInOtherMatches = new Set();
+    currentRoundMatches.forEach(m => {
+        if (m.id !== matchId) {
+            if (m.white_player_id) busyInOtherMatches.add(m.white_player_id);
+            if (m.black_player_id) busyInOtherMatches.add(m.black_player_id);
+        }
+    });
+
+    const availablePlayers = allPlayersList.filter(p => !busyInOtherMatches.has(p.id));
+    const busyPlayers = allPlayersList.filter(p => busyInOtherMatches.has(p.id));
+
+    const buildOptions = (selectedId) => {
+        let html = '<option value="">Select Player</option>';
+        if (availablePlayers.length > 0) {
+            html += `<optgroup label="Available Players (${availablePlayers.length})">`;
+            availablePlayers.forEach(p => {
+                const isSelected = p.id === selectedId ? 'selected' : '';
+                html += `<option value="${p.id}" ${isSelected}>${p.player_name} (${p.roll_no || p.player_id}${p.branch ? ' · ' + p.branch : ''})</option>`;
+            });
+            html += `</optgroup>`;
+        }
+        if (busyPlayers.length > 0) {
+            html += `<optgroup label="Playing on Other Boards (${busyPlayers.length})">`;
+            busyPlayers.forEach(p => {
+                html += `<option value="${p.id}" disabled style="color: var(--white-40);">🔒 ${p.player_name} (${p.roll_no || p.player_id})</option>`;
+            });
+            html += `</optgroup>`;
+        }
+        return html;
+    };
+
+    whiteSelect.innerHTML = buildOptions(match.white_player_id);
+    blackSelect.innerHTML = buildOptions(match.black_player_id);
+
+    whiteNameInput.value = match.white_player?.player_name || '';
+    blackNameInput.value = match.black_player?.player_name || '';
+
+    document.getElementById('editPairingModal').classList.add('visible');
+}
+
+function closeEditPairingModal() {
+    const modal = document.getElementById('editPairingModal');
+    if (modal) modal.classList.remove('visible');
+}
+
+function onEditPairingWhiteChange() {
+    const whiteId = document.getElementById('editPairingWhiteSelect').value;
+    const player = allPlayersList.find(p => p.id === whiteId);
+    if (player) {
+        document.getElementById('editPairingWhiteCustomName').value = player.player_name;
+    }
+}
+
+function onEditPairingBlackChange() {
+    const blackId = document.getElementById('editPairingBlackSelect').value;
+    const player = allPlayersList.find(p => p.id === blackId);
+    if (player) {
+        document.getElementById('editPairingBlackCustomName').value = player.player_name;
+    }
+}
+
+async function handleEditPairingSubmit() {
+    const matchId = document.getElementById('editPairingMatchId').value;
+    const whiteId = document.getElementById('editPairingWhiteSelect').value;
+    const blackId = document.getElementById('editPairingBlackSelect').value;
+    const whiteName = document.getElementById('editPairingWhiteCustomName').value.trim();
+    const blackName = document.getElementById('editPairingBlackCustomName').value.trim();
+
+    if (!whiteId || !blackId) {
+        showToast('Please select both White and Black players', true);
+        return;
+    }
+
+    if (whiteId === blackId) {
+        showToast('A player cannot play against themselves! Choose different players.', true);
+        return;
+    }
+
+    const match = currentRoundMatches.find(m => m.id === matchId);
+    const boardNum = match ? match.match_number : '';
+
+    try {
+        // 1. Update match pairing players
+        await updateMatchPairing(matchId, {
+            white_player_id: whiteId,
+            black_player_id: blackId
+        });
+
+        // 2. If White player name was modified, update participant in database
+        const whitePlayer = allPlayersList.find(p => p.id === whiteId);
+        if (whiteName && whitePlayer && whitePlayer.player_name !== whiteName) {
+            await updateParticipant(whiteId, { player_name: whiteName });
+        }
+
+        // 3. If Black player name was modified, update participant in database
+        const blackPlayer = allPlayersList.find(p => p.id === blackId);
+        if (blackName && blackPlayer && blackPlayer.player_name !== blackName) {
+            await updateParticipant(blackId, { player_name: blackName });
+        }
+
+        showToast(`Board #${boardNum} pair and player names updated successfully!`);
+        closeEditPairingModal();
+
+        // Refresh all relevant sections
+        await loadAdminPlayers();
+        await loadPairings(pairingCurrentRound);
+        if (currentAdminTab === 'results') loadAdminRound(adminCurrentRound);
+    } catch (err) {
+        console.error('Error updating pairing:', err);
+        showToast('Failed to update pairing: ' + (err.message || ''), true);
+    }
+}
+
+// ==============================================
 // 3. RESULT MANAGEMENT LOGIC
 // ==============================================
 
@@ -746,7 +885,7 @@ function renderAdminMatchCard(match, roundNumber) {
     };
 
     const statusBadgeClass = match.status === 'completed' ? 'badge-completed' :
-                             match.status === 'in_progress' ? 'badge-in-progress' : 'badge-pending';
+        match.status === 'in_progress' ? 'badge-in-progress' : 'badge-pending';
 
     return `
         <div class="match-admin-card" id="admin-match-${match.id}">
@@ -816,7 +955,7 @@ async function saveResult(matchId, previousResult) {
         document.getElementById('confirmTitle').textContent = '⚠️ Confirm Result Change';
         const msg = `You are changing this result from <strong>${formatResult(previousResult)}</strong> to <strong>${formatResult(newResult)}</strong>. This will recalculate all player standings and leaderboards. Continue?`;
         document.getElementById('confirmMessage').innerHTML = msg;
-        
+
         pendingActionCallback = async () => {
             await doSaveResult(matchId, newResult);
         };
